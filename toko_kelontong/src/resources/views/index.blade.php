@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kloontongin</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet" />
+  <!-- Google Fonts: Montserrat -->
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+    integrity="sha512-xodZBNTC5n17Xt2atTPvknHGJwWtJx7nfHpIzgIpzgievIL/P+pWIerlbEgnVVFIwy6NUhNJbzTjxleJRlnXYA=="
+    crossorigin=""/>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="front/style/style.css" />
+</head>
+<body>
+
+ 
+  <!-- Top Bar -->
+ <div id="topBar" class="text-white py-1 px-3 d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center small nav-awal" style="background-color: #054D50;">
+  <div class="d-flex flex-column flex-md-row align-items-start gap-2">
+    <div><i class="bi bi-geo-alt-fill me-1"></i> BSD Modern Market, Jl. Letnan Sutopo, Banten 15111</div>
+    <div><i class="bi bi-clock me-1"></i> Setiap hari dari 08:00 Sampai 18:00 WIB</div>
+  </div>
+  <div class="mt-2 mt-md-0"><i class="bi bi-telephone-fill me-1"></i> Kontak kami : 089652731947</div>
+</div>
+
+
+
+  <!-- Navbar -->
+  <nav id="mainNavbar" class="navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top">
+    <div class="container">
+      <div class="d-flex flex-column">
+        <a class="navbar-brand fw-bold " href="#">Kloontongin</a>
+        <small class="text-muted" style="font-size: 13px;">Siap melayani kebutuhan anda</small>
+      </div>
+  
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+  
+        <div class="collapse navbar-collapse w-100" id="navbarNav">
+          <div class="d-flex justify-content-between align-items-center w-100 flex-wrap flex-lg-nowrap">
+
+            <!-- Menu navbar di tengah -->
+            <ul class="navbar-nav mx-auto">
+              <li class="nav-item"><a class="nav-link" href="#">Dashboard</a></li>
+              <li class="nav-item"><a class="nav-link" href="#kategori">Kategori</a></li>
+              <li class="nav-item"><a class="nav-link" href="#produk">Belanja</a></li>
+              <li class="nav-item"><a class="nav-link" href="#ratings">Review pelanggan</a></li>
+            </ul>
+
+            <!-- Keranjang & Login di kanan -->
+              <div class="d-flex gap-3 align-items-center">
+      
+                <!-- Pesanan -->
+                @auth
+                <a href="#" class="text-dark text-decoration-none d-flex align-items-center position-relative" id="orderIcon">
+                  <i class="bi bi-receipt-cutoff fs-5"></i>
+                  <span class="ms-1">Pesanan</span>
+                  <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none" id="orderBadge">1</span>
+                </a>
+                @endauth
+                <!-- Keranjang -->
+                @auth
+                <a href="#" class="text-dark text-decoration-none d-flex align-items-center position-relative open-cart" id="cartIconNavbar">
+                  <i class="bi bi-basket custom-icon fs-5"></i>
+                  <span class="ms-1">Keranjang</span>
+                  <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none" id="cartBadge">0</span>
+                </a>
+                @endauth
+                <!-- Login -->
+                @auth
+                  <div class="dropdown">
+                    <a class="dropdown-toggle text-dark text-decoration-none d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                      <i class="bi bi-person-circle custom-icon"></i>
+                      <span class="ms-1">{{ Auth::user()->name }}</span>
+                    </a>
+                    <ul class="dropdown-menu">
+                      <li>
+                        <form action="{{ route('logout') }}" method="POST">
+                          @csrf
+                          <button type="submit" class="dropdown-item">Logout</button>
+                        </form>
+                      </li>
+                    </ul>
+                  </div>
+                @else
+                  <a href="#" class="text-dark text-decoration-none d-flex align-items-center" data-bs-toggle="modal" data-bs-target="#loginModal">
+                    <i class="bi bi-person-circle custom-icon"></i><span class="ms-1">Login</span>
+                  </a>
+                @endauth
+              </div>
+          </div>
+        </div>
+    </div>
+  </nav>
+
+
+
+  <!-- Awal Model Bootsrap ini (popup) -->
+  <!-- Offcanvas Cart -->
+<div class="offcanvas offcanvas-end" tabindex="-1" id="cartSidebar" data-bs-scroll="true" data-bs-backdrop="false">
+
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title">Keranjang Belanja</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+  </div>
+  <div class="offcanvas-body d-flex flex-column p-0">
+    <!-- Scrollable area -->
+    <div id="cartSidebarBody" class="p-3 overflow-auto flex-grow-1"></div>
+
+    <!-- Sticky footer -->
+    <div class="cart-footer p-3 border-top bg-white">
+      <div class="d-flex justify-content-between mb-2">
+        <strong>Total:</strong>
+        <span id="cartTotal">Rp0</span>
+      </div>
+      <button class="btn btn-success w-100" data-bs-toggle="modal" data-bs-target="#checkoutModal">Checkout</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Checkout -->
+<div class="modal fade" id="checkoutModal" tabindex="-1" aria-labelledby="checkoutModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content">
+            <form id="orderForm">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="checkoutModalLabel">Detail Pesanan</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body overflow-auto" style="max-height: 70vh;">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <i class="bi bi-person-circle custom-icon"></i>
+                        <div>
+                            <strong id="userName">{{ Auth::user()->name ?? 'Pengguna' }}</strong><br>
+                            <small class="text-muted">{{ Auth::user()->email ?? 'Belum login' }}</small>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-warning mb-3" role="alert">
+                        Minimal pembelanjaan di atas Rp200.000 baru bisa diantar.
+                    </div>
+
+                    <!-- Detail produk yang dipilih -->
+                    <div id="orderDetails"></div>
+
+                    <!-- Peta lokasi dan info jarak -->
+                    <div id="map" style="height: 300px; border-radius: 10px; margin-bottom: 15px;"></div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Jarak dari Toko (KM)</label>
+                        <input type="text" id="distance" class="form-control" readonly>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Ongkir (Rp5000/km)</label>
+                        <input type="text" id="shippingCost" class="form-control" readonly>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Alamat Pengiriman (otomatis dari lokasi Anda)</label>
+                        <textarea id="userAddress" class="form-control" rows="2" readonly required></textarea>
+                    </div>
+
+                    <div class="mt-3">
+                        <p class="mb-1">Total Produk: <strong id="totalProdukCheckout">Rp0</strong></p>
+                        <p class="mb-1">Total Ongkir: <strong id="totalOngkirCheckout">Rp0</strong></p>
+                        <hr class="my-2">
+                        <p class="mb-0"><strong>Total Keseluruhan: <span id="totalWithShipping">Rp0</span></strong></p>
+                    </div>
+                </div>
+
+                <!-- Total dan tombol pesanan -->
+                <div id="checkoutTotalContainer" class="d-flex justify-content-between align-items-center border-top pt-3 mt-3 px-3">
+                    <strong>Total Belanja:</strong>
+                    <div id="checkoutTotal" class="text-end">Rp0</div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-success w-100">Pesan Sekarang</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<!-- Modal Pesanan -->
+<div class="modal fade" id="orderStatusModal" tabindex="-1" aria-labelledby="orderStatusModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-body">
+        @forelse ($pesanans as $pesanan)
+          <div class="border rounded p-3 mb-3 shadow-sm">
+            <div class="d-flex justify-content-between align-items-center">
+              <div>
+                <div class="fw-bold text-success">#{{ $pesanan->nomor_pesanan }}</div>
+                <small class="text-muted">Total: Rp{{ number_format($pesanan->total, 0, ',', '.') }}</small>
+                <br>
+                <small>Status: {{ ucfirst($pesanan->status) }}</small>
+              </div>
+              <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal"
+                data-bs-target="#detailPesananModal-{{ $pesanan->id }}">
+                Lihat Detail
+              </button>
+            </div>
+          </div>
+        @empty
+          <p class="text-danger text-center">Tidak ada pesanan ditemukan.</p>
+        @endforelse
+      </div>
+    </div>
+  </div>
+</div>
+
+@foreach ($pesanans as $pesanan)
+  <div class="modal fade" id="detailPesananModal-{{ $pesanan->id }}" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Detail Pesanan #{{ $pesanan->nomor_pesanan }}</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+
+          <h6 class="fw-bold">Produk:</h6>
+          @foreach ($pesanan->items as $item)
+            <div class="d-flex justify-content-between border-bottom py-2">
+              <div>
+                <div class="fw-semibold">{{ $item->product->name }}</div>
+                <small>Jumlah: {{ $item->qty }}</small>
+              </div>
+              <div>Rp{{ number_format($item->total, 0, ',', '.') }}</div>
+            </div>
+          @endforeach
+          @if ($pesanan->pengiriman)
+            <div class="d-flex justify-content-between border-bottom py-2">
+              <div>
+                <div class="fw-semibold">Biaya Pengiriman :</div>
+              </div>
+              <div>Rp{{ number_format($pesanan->pengiriman->total, 0, ',', '.') }}</div>
+            </div>
+          @else
+            <p class="text-muted">Belum dikirim</p>
+          @endif
+            <div class="d-flex justify-content-between border-bottom py-2">
+              <div>
+                <div class="fw-semibold">Total :</div>
+              </div>
+              <div>Rp{{ number_format($pesanan->total, 0, ',', '.') }}</div>
+            </div>
+
+          <div class="mt-3">
+            <h6 class="fw-bold">Alamat Pengiriman:</h6>
+            @if ($pesanan->pengiriman)
+              <p class="mb-0">{{ $pesanan->pengiriman->alamat }}</p>
+              <small>Jarak: {{ $pesanan->pengiriman->jarak }} KM</small><br>
+            @else
+              <p class="text-muted">Belum dikirim</p>
+            @endif
+              <small>Status: {{ ucfirst($pesanan->status) }}</small>
+          </div>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+        </div>
+      </div>
+    </div>
+  </div>
+@endforeach
+
+
+<div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="successModalLabel">Pesanan Berhasil!</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Terima kasih atas pesanan Anda! Pesanan Anda sedang diproses.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                </div>
+        </div>
+    </div>
+</div>
+<!-- Modal Login -->
+<div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content p-4 rounded-4 shadow-lg border-0">
+        <div class="modal-header border-0">
+          <h5 class="modal-title fw-bold text-success" id="loginModalLabel">Selamat Datang Kembali 👋</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+        </div>
+        <div class="modal-body">
+          <form id="loginForm" method="POST" action="{{ route('login') }}">
+            @csrf
+            <div class="mb-3">
+              <label for="loginEmail" class="form-label">Email</label>
+              <input type="email" name="email" class="form-control rounded-pill" id="loginEmail" required>
+            </div>
+            <div class="mb-3">
+              <label for="loginPassword" class="form-label">Password</label>
+              <input type="password" name="password" class="form-control rounded-pill" id="loginPassword" required>
+            </div>
+            <button type="submit" class="btn btn-success w-100 rounded-pill fw-semibold">Login</button>
+          </form>
+          <div class="text-center mt-3">
+            <small class="text-muted">Belum punya akun? <a href="#" id="showRegister" class="text-success" data-bs-toggle="modal" data-bs-target="#registerModal" data-bs-dismiss="modal">Daftar di sini</a></small>
+          </div>
+        </div>
+      </div>
+    </div>
+</div>
+  
+  <!-- Modal Register -->
+<div class="modal fade" id="registerModal" tabindex="-1" aria-labelledby="registerModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content p-4 rounded-4 shadow-lg border-0">
+      <div class="modal-header border-0">
+        <h5 class="modal-title fw-bold text-success" id="registerModalLabel">Buat Akun Baru 🌱</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+      </div>
+      <div class="modal-body">
+        <form method="POST" action="{{ route('register') }}">
+          @csrf
+          <div class="mb-3">
+            <label for="registerName" class="form-label">Nama Lengkap</label>
+            <input type="text" name="name" class="form-control rounded-pill" id="registerName" required>
+          </div>
+          <div class="mb-3">
+            <label for="registerEmail" class="form-label">Email</label>
+            <input type="email" name="email" class="form-control rounded-pill" id="registerEmail" required>
+          </div>
+          <div class="mb-3">
+            <label for="registerPhone" class="form-label">Nomor Telepon</label>
+            <input type="tel" name="phone" class="form-control rounded-pill" id="registerPhone" required>
+          </div>
+          <div class="mb-3">
+            <label for="registerDOB" class="form-label">Tanggal Lahir</label>
+            <input type="date" name="dob" class="form-control rounded-pill" id="registerDOB" required>
+          </div>
+          <div class="mb-3">
+            <label for="registerGender" class="form-label">Jenis Kelamin</label>
+            <select name="gender" class="form-select rounded-pill" id="registerGender" required>
+              <option value="">Pilih</option>
+              <option value="Laki-laki">Laki-laki</option>
+              <option value="Perempuan">Perempuan</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="registerPassword" class="form-label">Password</label>
+            <input type="password" name="password" class="form-control rounded-pill" id="registerPassword" required>
+          </div>
+          <div class="mb-3">
+            <label for="registerPasswordConfirmation" class="form-label">Konfirmasi Password</label>
+            <input type="password" name="password_confirmation" class="form-control rounded-pill" id="registerPasswordConfirmation" required>
+          </div>
+          <button type="submit" class="btn btn-success w-100 rounded-pill fw-semibold">Daftar</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+  
+  <!-- End Model Bootstrap ini ya -->
+
+  <!-- Hero Section -->
+  <section class="py-5 mt-5">
+    <div class="container">
+      <div class="d-flex flex-column flex-lg-row  text-white rounded-4 overflow-hidden mx-auto hero-card" style="background-color: #064F4E;">
+        
+        <!-- Konten Teks -->
+        <div class="d-flex flex-column justify-content-center p-4 p-lg-5 flex-fill text-section">
+          <h2 class="fw-bold mb-3">
+            Penuhi kebutuhan Belanja <br />
+            Harian Anda <span class="text-warning fst-italic">Setiap Hari !</span>
+          </h2>
+          <p class="mb-4">Nikmati pengalaman berbelanja di website kami</p>
+          <a href="#produk" class="btn btn-light px-4 py-2 rounded-pill fw-semibold shadow-sm" style="color: #064F4E;">
+            Cek Produk yuk!
+          </a>
+        </div>
+
+        <!-- Gambar -->
+        <div class="image-wrapper">
+          <img src="front/assets/person.png" alt="Sayuran" class="img-fluid hero-image" />
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+
+    <!-- Kategori populer Section -->
+    <section id="kategori" class="py-5 bg-light">
+        <div class="container">
+        <!-- Judul dan Tombol Panah -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4 class="fw-bold text-dark mb-0">Kategori populer</h4>
+            <div class="d-flex gap-2">
+                <button id="scrollLeft" class="scroll-button btn rounded-circle d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                    <i class="bi bi-chevron-left"></i>
+                  </button>
+                  <button id="scrollRight" class="scroll-button btn rounded-circle d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
+                    <i class="bi bi-chevron-right"></i>
+                  </button> 
+            </div>
+        </div>
+    
+        <!-- Kategori Scroll -->
+        <div class="scroll-wrapper">
+        <div id="categoryScroll" class=" scroll-container  d-flex overflow-auto gap-4 pb-3">
+            <!-- Item Kategori -->
+            <div class="text-center show shadow-sm rounded-3 p-3 flex-shrink-0 " style="width: 150px; background-color: #88C273;">
+                <div class="mb-2 overflow-hidden rounded" style="width: 100%; height: 80px; ">
+                <img src="front/assets/susu.png" alt="Cake & Milk" style="width: 100%; height: 100%; object-fit: cover; " />
+                </div>
+                <h6 class="fw-semibold mb-0">Susu diamon uht</h6>
+                <small class="text-muted">15 items</small>
+            </div>
+
+            <div class="text-center  shadow-sm rounded-3 p-3 flex-shrink-0" style="width: 150px; background-color: #FFF1DB;">
+                <div class="mb-2 overflow-hidden rounded" style="width: 100%; height: 80px; ">
+                <img src="front/assets/indomi.png" alt="Cake & Milk" style="width: 100%; height: 100%; object-fit: cover; " />
+                </div>
+                <h6 class="fw-semibold mb-0">Indomie Pack</h6>
+                <small class="text-muted">11 items</small>
+            </div>
+    
+            <div class="text-center  shadow-sm rounded-3 p-3 flex-shrink-0" style="width: 150px; background-color: #88C273;">
+                <div class="mb-2 overflow-hidden rounded" style="width: 100%; height: 80px; ">
+                <img src="front/assets/galon.png" alt="Cake & Milk" style="width: 100%; height: 100%; object-fit: cover; " />
+                </div>
+                <h6 class="fw-semibold mb-0">Galon aqua</h6>
+                <small class="text-muted">25 items</small>
+            </div>
+
+            <div class="text-center  shadow-sm rounded-3 p-3 flex-shrink-0" style="width: 150px; background-color: #FFF1DB;">
+                <div class="mb-2 overflow-hidden rounded" style="width: 100%; height: 80px; ">
+                <img src="front/assets/roko.png" alt="Cake & Milk" style="width: 100%; height: 100%; object-fit: cover; " />
+                </div>
+                <h6 class="fw-semibold mb-0">Sampoerna mild</h6>
+                <small class="text-muted">31 items</small>
+            </div>
+    
+            <div class="text-center  shadow-sm rounded-3 p-3 flex-shrink-0" style="width: 150px; background-color: #88C273;">
+                <div class="mb-2 overflow-hidden rounded" style="width: 100%; height: 80px; ">
+                <img src="front/assets/tepung.png" alt="Cake & Milk" style="width: 100%; height: 100%; object-fit: cover; " />
+                </div>
+                <h6 class="fw-semibold mb-0">Tepung</h6>
+                <small class="text-muted">11 items</small>
+            </div>
+
+            <div class="text-center  shadow-sm rounded-3 p-3 flex-shrink-0" style="width: 150px; background-color: #FFF1DB;">
+                <div class="mb-2 overflow-hidden rounded" style="width: 100%; height: 80px; ">
+                <img src="front/assets/kopi.png" alt="Cake & Milk" style="width: 100%; height: 100%; object-fit: cover; " />
+                </div>
+                <h6 class="fw-semibold mb-0">Kopi kapal api mix</h6>
+                <small class="text-muted">115 items</small>
+            </div>
+    
+            <div class="text-center  shadow-sm rounded-3 p-3 flex-shrink-0" style="width: 150px; background-color: #88C273;">
+                <div class="mb-2 overflow-hidden rounded" style="width: 100%; height: 80px; ">
+                <img src="front/assets/gas.png" alt="Cake & Milk" style="width: 100%; height: 100%; object-fit: cover; " />
+                </div>
+                <h6 class="fw-semibold mb-0">Gas 3kg</h6>
+                <small class="text-muted">31 items</small>
+            </div>
+
+            <div class="text-center  shadow-sm rounded-3 p-3 flex-shrink-0" style="width: 150px; background-color: #FFF1DB;">
+                <div class="mb-2 overflow-hidden rounded" style="width: 100%; height: 80px; ">
+                <img src="front/assets/minyak.png" alt="Cake & Milk" style="width: 100%; height: 100%; object-fit: cover; " />
+                </div>
+                <h6 class="fw-semibold mb-0">Minyak</h6>
+                <small class="text-muted">40 items</small>
+            </div>
+            <div class="text-center  shadow-sm rounded-3 p-3 flex-shrink-0" style="width: 150px; background-color: #88C273;">
+                <div class="mb-2 overflow-hidden rounded" style="width: 100%; height: 80px; ">
+                <img src="front/assets/endog.png" alt="Cake & Milk" style="width: 100%; height: 100%; object-fit: cover; " />
+                </div>
+                <h6 class="fw-semibold mb-0">Telur</h6>
+                <small class="text-muted">89 items</small>
+            </div>
+        </div>
+    </div>
+        <!-- 2 Card Besar -->
+        <div class="row mt-4 g-4">
+            <!-- Kartu 1 -->
+            <div class="col-md-6">
+              <div class="p-5 rounded-4 d-flex align-items-center justify-content-between flex-lg-row flex-column-reverse promo-card left" style=" background-color: #FFF1DB; min-height: 260px;">
+                <div class="text-center text-lg-start">
+                  <h4 class="fw-bold mb-3" style="line-height: 1.5;">Setiap hari segar &<br>Bersih dengan produk kami</h4>
+                  <a href="#produk" class="btn btn-dark px-4 py-2 rounded-pill fw-semibold w-100 w-lg-auto">Shop now</a>
+                </div>
+                <img src="front/assets/naga.png" alt="Basket" class="img-fluid" style="max-height: 200px; object-fit: contain;" />
+              </div>
+            </div>
+          
+            <!-- Kartu 2 -->
+            <div class="col-md-6">
+              <div class="p-5 rounded-4 d-flex align-items-center justify-content-between flex-lg-row flex-column-reverse promo-card right" style=" background-color: #88C273; min-height: 260px;">
+                <div class="text-center text-lg-start">
+                  <h4 class="fw-bold mb-3" style="line-height: 1.5;">Buat sarapan mu<br>Sehat dan mudah </h4>
+                  <a href="#produk" class="btn btn-dark px-4 py-2 rounded-pill fw-semibold w-100 w-lg-auto">Shop now</a>
+                </div>
+                <img src="front/assets/nyarap.png" alt="Breakfast" class="img-fluid" style="max-height: 200px; object-fit: contain;" />
+              </div>
+            </div>
+          </div>
+        </div>
+    </section>
+
+   <!-- Produkk -->
+    <section id="produk" class="py-5 bg-white">
+        <div  class="container">
+      
+          <!-- Judul -->
+          <h2 class="fw-bold text-center mb-4" style="color: #064F4E;">Slamat datang di produk toko kami</h2>
+      
+          <!-- Filter Kategori -->
+          <div class="d-flex justify-content-center flex-wrap gap-2 mb-5">
+            <button class="btn btn-sm rounded-pill px-4 py-2 text-white fw-semibold" style="background-color: #A34B2B;">All Products</button>
+            <button class="btn btn-outline-secondary btn-sm rounded-pill px-4 py-2">🥤 Minuman</button>
+            <button class="btn btn-outline-secondary btn-sm rounded-pill px-4 py-2">🥬 Sayuran</button>
+            <button class="btn btn-outline-secondary btn-sm rounded-pill px-4 py-2">🥛 Susu</button>
+            <button class="btn btn-outline-secondary btn-sm rounded-pill px-4 py-2">🥩 Daging</button>
+            <button class="btn btn-outline-secondary btn-sm rounded-pill px-4 py-2">🌾 Tepung</button>
+            <button class="btn btn-outline-secondary btn-sm rounded-pill px-4 py-2">🛢️ Minyak</button>
+            <button class="btn btn-outline-secondary btn-sm rounded-pill px-4 py-2">🧂 Bumbu Masak</button>
+            <button class="btn btn-outline-secondary btn-sm rounded-pill px-4 py-2">🍜 Makanan Instan</button>
+          </div>
+          <!-- Kartu Produk -->
+        <div class="row g-4">
+          @foreach($products as $product)
+            <div class="col-6 col-md-4 col-lg-3 product">
+              <div class="border rounded-4 p-3 shadow-sm h-100 position-relative">
+                @if($loop->first)
+                  <span class="badge bg-info position-absolute top-0 start-0 m-2">New</span>
+                @endif
+                <div class="product-img-wrapper mb-3">
+                  <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" class="product-img" />
+                </div>
+                <small class="text-muted">{{ $product->category->name ?? 'Tanpa Kategori' }}</small>
+                <h6 class="fw-bold product-name">{{ $product->name }}</h6>
+                <p class="mb-1 text-muted small">{{ $product->brand }}</p>
+                <div class="d-flex justify-content-between align-items-center">
+                  <p class="product-price" data-price="{{ $product->harga }}">Rp{{ number_format($product->harga, 0, ',', '.') }}</p>
+                  @auth
+                     <button class="btn btn-sm btn-outline-dark rounded-pill d-flex align-items-center btn-add-to-cart"
+                              data-id="{{ $product->id }}"
+                              data-name="{{ $product->name }}"
+                              data-price="{{ $product->harga }}"
+                              data-image="{{ asset('storage/' . $product->image) }}">
+                        <i class="bi bi-cart me-1"></i> Add
+                      </button> 
+                  @endauth
+                </div>
+              </div>
+            </div>
+          @endforeach
+        </div>
+
+
+    <!-- delivery -->
+      </section>
+      <section class="py-5">
+        <div class="container">
+          <div class="rounded-4 px-4 px-md-5 py-5" style="background-color: #064F4E;">
+            <div class="row justify-content-center align-items-center g-2">
+              <!-- Konten Kiri -->
+              <div class="col-lg-5 text-white">
+                <h2 class="fw-bold mb-4">
+                  Males keluar rumah? <br>Tenang aja
+                  <span class="text-warning fst-italic">Bisa di anter kok!</span>
+                </h2>
+      
+                <!-- Ikon dan teks -->
+                <div class="d-flex flex-column gap-3 mb-4">
+                  <div class="d-flex align-items-center gap-2">
+                    <i class="bi bi-tags"></i>
+                    <span>Harga bersahabat</span>
+                  </div>
+      
+                  <!-- Dropdown toggle -->
+                  <div>
+                    <a
+                      class="d-flex align-items-center gap-2 text-white text-decoration-none"
+                      data-bs-toggle="collapse"
+                      href="#collapseSyarat"
+                      role="button"
+                      aria-expanded="false"
+                      aria-controls="collapseSyarat"
+                    >
+                      <i class="bi bi-truck"></i>
+                      <span>Di antar sampai rumah <small>s&k berlaku</small></span>
+                    </a>
+                    <div class="collapse mt-2 text-white-50" id="collapseSyarat">
+                      <small>Pengantaran hanya tersedia untuk area tertentu dengan minimal belanja Rp200.000. Pengiriman dilakukan setiap hari pukul 8.00 - 18.00 WIB.</small>
+                    </div>
+                  </div>
+                </div>
+      
+                <!-- Tombol scroll ke produk -->
+                <a href="#produk" class="btn btn-light px-4 py-2 rounded-pill fw-semibold shadow-sm" style="color: #064F4E;">
+                  Order Now
+                </a>
+              </div>
+      
+              <!-- Gambar Kanan -->
+              <div class="col-lg-5 text-center">
+                <img src="front/assets/delivery.png" alt="Kurir" class="img-fluid" style="max-height: 450px;">
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+  
+  <!-- ratingg -->
+  <div id="ratings" class="rating-section container">
+    <div class="rating-initial text-center">
+        <h3>Bagaimana Pengalamanmu?</h3>
+        <div class="d-flex justify-content-center align-items-center flex-wrap">
+            <button class="btn-rating emoji-btn bad" data-rating="bad" aria-label="Buruk">😠</button>
+            <button class="btn-rating emoji-btn decent" data-rating="decent" aria-label="Lumayan">🙂</button>
+            <button class="btn-rating emoji-btn love-it" data-rating="love-it" aria-label="Sangat Baik">😍</button>
+        </div>
+        <button id="closeRating" class="btn btn-sm btn-outline-secondary position-absolute top-0 end-0 m-2" aria-label="Tutup">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-x-lg" viewBox="0 0 16 16">
+                <path d="M2.146 2.854a.5.5 0 0 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8 2.146 2.854Z"/>
+            </svg>
+        </button>
+    </div>
+    <div class="rating-details text-center d-none">
+        <h3 id="detailTitle">Bagikan Lebih Detail</h3>
+        <div id="recentEmoji" class="h2 mb-2"></div>
+        <textarea class="form-control mb-3" id="feedbackText" rows="4" placeholder="Ada yang ingin ditambahkan? (opsional)"></textarea>
+        <button class="btn btn-success btn-lg" id="submitFeedback">Kirim Feedback</button>
+    </div>
+
+    <div class="modal fade" id="thankYouModal" tabindex="-1" aria-labelledby="thankYouModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-body text-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="70" height="70" fill="#28a745" class="bi bi-chat-left-text-fill mb-3" viewBox="0 0 16 16">
+                        <path d="M0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4.414a1 1 0 0 0-.707.293L.854 15.146A1 1 0 0 1 0 14.414V2zm3.5 1a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5H12a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 0-.5-.5H3.5z"/>
+                    </svg>
+                    <h4>Terima kasih</h4>
+                    <p>Feedback Anda membantu kami untuk berkembang, terima kasih atas waktu yang Anda berikan!</p>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Selesai</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Footer -->
+<footer class="bg-dark-green text-white pt-5 pb-3 mt-5">
+  <div class="container">
+    <div class="row justify-content-center text-start text-md-start">
+      <!-- Brand & Alamat -->
+      <div class="col-12 col-md-4 mb-4">
+        <h5 class="fw-bold">Kloontongin</h5>
+        <p class="mb-1 small">Jl. Pasar Tradisional No. 123, Jakarta Selatan</p>
+        <p class="small mb-2">Kode Pos 12345, Indonesia</p>
+        <a href="https://www.google.com/maps?q=-6.26222430306444,106.52494354240288" 
+           target="_blank" class="text-white small text-decoration-underline d-inline-block">
+          📍 View in Google Maps
+        </a>
+      </div>
+
+      <!-- Navigasi -->
+      <div class="col-12 col-md-3 mb-4">
+        <h6 class="fw-semibold">Navigasi</h6>
+        <ul class="list-unstyled">
+          <li><a href="" class="text-white text-decoration-none">Dashboard</a></li>
+          <li><a href="#kategori" class="text-white text-decoration-none">Kategori</a></li>
+          <li><a href="#produk" class="text-white text-decoration-none">Belanja</a></li>
+          <li><a href="ratings" class="text-white text-decoration-none">Review Pelanggan</a></li>
+        </ul>
+      </div>
+
+      <!-- Social Media -->
+      <div class="col-12 col-md-3 mb-4">
+        <h6 class="fw-semibold">Ikuti Kami</h6>
+        <div class="d-flex gap-3">
+          <a href="#" class="text-white fs-5"><i class="bi bi-facebook"></i></a>
+          <a href="#" class="text-white fs-5"><i class="bi bi-instagram"></i></a>
+          <a href="#" class="text-white fs-5"><i class="bi bi-whatsapp"></i></a>
+          <a href="#" class="text-white fs-5"><i class="bi bi-twitter-x"></i></a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer Bawah -->
+    <div class="text-center pt-3 border-top border-light mt-3">
+      <small>&copy; 2025 Kloontongin. Semua Hak Dilindungi.</small>
+    </div>
+  </div>
+</footer>
+
+
+  <!-- Bootstrap JS -->
+ <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+ <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+    integrity="sha512-XQoYM8mRkwHZjGcnRaXVbj7brUogZUI+FzqoMVcKMwnPCyGnTv9RqgGHRgkgXpSHJWKBGOW6RERCne2LgaaK1dQ=="
+    crossorigin=""></script>
+  <script src="front/js/script.js"></script>
+  <script src="front/js/second.js"></script>
+  <script src="front/js/logikacart.js"></script>
+   <script src="front/js/map.js"></script>
+   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="{{ env('MIDTRANS_CLIENT_KEY') }}"></script>
+</body>
+</html>
