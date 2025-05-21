@@ -1,9 +1,10 @@
 <?php
 
-// Route::get('/', 'PosbeasiswaController@index');
-// Route::get('/beasiswa/{id}', 'PosbeasiswaController@show')->name('beasiswa.show');
-// Route::get('/beasiswa/{id}/daftar', 'PendaftaranController@create')->name('pendaftaran.create');
-// Route::post('/beasiswa/{id}/daftar', 'PendaftaranController@store')->name('pendaftaran.store');
+Route::get('/', 'FrontendController@home');
+Route::get('/pengajuan', 'FrontendController@pengajuan');
+Route::get('/pesanan', 'FrontendController@pesanan');
+Route::get('/pesananresep', 'FrontendController@pesananresep');
+Route::get('/profile', 'FrontendController@profile');
 
 Route::redirect('/loginadmin', '/login');
 Route::get('/home', function () {
