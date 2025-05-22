@@ -14,6 +14,7 @@ document.addEventListener("DOMContentLoaded", function () {
   let cartOngkir = 0;
   let cartJarak = 0;
 
+
   function addToCartList(product) {
     const existing = cartItems.tanpa.find((p) => p.obat_id === product.obat_id);
     if (existing) existing.qty++;
@@ -111,20 +112,33 @@ document.addEventListener("DOMContentLoaded", function () {
           return data;
         }))
         .then((res) => {
-          Swal.fire({
-            icon: "success",
-            title: "Pesanan berhasil!",
-            text: res.message,
-            timer: 2000,
-            showConfirmButton: false
-          }).then(() => {
-            cartItems.tanpa = [];
-            renderCartList();
-            updateCartTotal();
-            updateCartBadge();
-            window.location.href = "/pesanan";
-          });
-        })
+  if (res.snap_token) {
+    window.snap.pay(res.snap_token, {
+onSuccess: function(result) {
+  // 1) Panggil endpoint updateStatus
+  fetch('/checkout/status', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-TOKEN': document.querySelector("meta[name='csrf-token']").content
+    },
+    body: JSON.stringify({
+      order_id_full: res.order_id_full,            // dari response /checkout
+      transaction_status: result.transaction_status
+    })
+  })
+  // 2) Setelah server oke, beri notifikasi dan redirect
+  .then(r => r.ok
+    ? Swal.fire('Pembayaran Berhasil','Pesanan sedang diproses','success')
+        .then(() => window.location.href = '/pesanan')
+    : Promise.reject()
+  )
+  .catch(() => Swal.fire('Error','Gagal memperbarui status pesanan','error'));
+}
+
+    });
+  }
+})
         .catch((err) => {
           console.error("Gagal fetch /checkout:", err);
           Swal.fire({

@@ -337,13 +337,19 @@
     </div>
   </div>
 </footer>
-
+<script>
+  
+</script>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js" defer></script>
+<script defer src="https://app.sandbox.midtrans.com/snap/snap.js"
+        data-client-key="{{ config('midtrans.client_key') }}"></script>
+{{-- <script defer src="front/js/cart-map-checkout.js"></script> --}}
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="front/js/script.js"></script>
+<script src="front/js/script.js" defer></script>
 <script src="front/js/cart-map-checkout.js"></script>
 <script src="front/js/kategori.js"></script>
 <script src="front/js/pengajuan.js"></script>
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+{{-- <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script> --}}
 </body>
 </html>

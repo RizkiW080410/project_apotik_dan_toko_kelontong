@@ -20,6 +20,16 @@
                   {{ $pesanan->pengajuan_id ? 'Pesanan dengan Resep Dokter' : 'Pesanan Tanpa Resep Dokter' }}
                 </span>
               </div>
+              <div><strong>Status:</strong> 
+              <span class="badge 
+                {{ $pesanan->status === 'menunggu' ? 'bg-warning text-dark' : '' }}
+                {{ $pesanan->status === 'diproses' ? 'bg-info text-white' : '' }}
+                {{ $pesanan->status === 'dikirim' ? 'bg-primary text-white' : '' }}
+                {{ $pesanan->status === 'selesai' ? 'bg-success text-white' : '' }}
+                {{ $pesanan->status === 'dibatalkan' ? 'bg-danger text-white' : '' }}">
+                {{ ucfirst($pesanan->status) }}
+              </span>
+            </div>
               <div><strong>Tanggal:</strong> {{ \Carbon\Carbon::parse($pesanan->tanggal)->translatedFormat('d F Y') }}</div>
               <div><strong>Total:</strong> Rp{{ number_format($pesanan->total, 0, ',', '.') }}</div>
             </div>
@@ -56,6 +66,18 @@
                     {{ $pesanan->pengajuan_id ? 'Pesanan dengan Resep Dokter' : 'Pesanan Tanpa Resep Dokter' }}
                   </span>
                 </p>
+
+                <div class="mb-3">
+                <h6 class="fw-bold">Status Pesanan</h6>
+                <span class="badge 
+                  {{ $pesanan->status === 'menunggu' ? 'bg-warning text-dark' : '' }}
+                  {{ $pesanan->status === 'diproses' ? 'bg-info text-white' : '' }}
+                  {{ $pesanan->status === 'dikirim' ? 'bg-primary text-white' : '' }}
+                  {{ $pesanan->status === 'selesai' ? 'bg-success text-white' : '' }}
+                  {{ $pesanan->status === 'dibatalkan' ? 'bg-danger text-white' : '' }}">
+                  {{ ucfirst($pesanan->status) }}
+                </span>
+              </div>
 
                 <!-- Daftar Produk -->
                 <h6 class="fw-bold mt-4">Produk Dipesan</h6>

@@ -25,9 +25,14 @@ Livewire::setScriptRoute(function ($handle) {
 // ✅ Halaman publik
     Route::get('/', [FrontendController::class, 'home'])->name('home');
 // ✅ Autentikasi
+Route::post('/checkout/status', [CheckoutController::class, 'updateStatus'])->name('checkout.updateStatus');
+
 Route::post('/login', [AuthController::class, 'login'])->name('login');
 Route::post('/register', [AuthController::class, 'register'])->name('register');
+// Route::get ('/midtrans/finish',    [CheckoutController::class,'finish'])->name('midtrans.finish');
+// Route::post('/midtrans/callback', [CheckoutController::class, 'store'])->name('midtrans.callback');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+// Route::post('/midtrans/callback', [CheckoutController::class, 'callback']);
 
 // ✅ Halaman yang butuh login
 Route::middleware(['auth'])->group(function () {
@@ -38,6 +43,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/pesanan', [FrontendController::class, 'pesanan']);
     Route::post('/pesananresep/kirim', [FrontendController::class, 'submitPesananResep'])->name('pesananresep.submit');
     Route::get('/profile', [FrontendController::class, 'profile']);
+    
 });
 
 
