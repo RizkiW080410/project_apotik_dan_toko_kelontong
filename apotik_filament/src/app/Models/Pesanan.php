@@ -29,9 +29,14 @@ class Pesanan extends Model
     }
 
     public function items()
-    {
-        return $this->hasMany(PesananItem::class);
-    }
+{
+    return $this->hasMany(PesananItem::class);
+}
+
+public function pengiriman()
+{
+    return $this->hasOne(Pengiriman::class);
+}
 
     protected static function boot()
     {

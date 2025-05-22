@@ -54,9 +54,9 @@
             </div>
 
             <!-- Data tersembunyi untuk dikirim ke controller -->
-<input type="hidden" name="jarak" id="hiddenJarak">
-<input type="hidden" name="total" id="hiddenOngkir">
-<input type="hidden" name="alamat" id="hiddenAlamat">
+            <input type="hidden" name="jarak" id="hiddenJarak">
+            <input type="hidden" name="total" id="hiddenOngkir">
+            <input type="hidden" name="alamat" id="hiddenAlamat">
 
             <!-- Tombol -->
             <div class="mt-4">

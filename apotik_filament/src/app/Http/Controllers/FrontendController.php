@@ -27,7 +27,12 @@ class FrontendController extends Controller
     public function pesanan()
     {
         $user = auth()->user();
-        $pesanans = $user->profile ? $user->profile->pesanans()->with('items')->latest()->get() : collect();
+        $pesanans = $user->profile
+    ? $user->profile->pesanans()
+        ->with(['items.obat', 'profile.user']) // ini sudah cukup
+        ->latest()
+        ->get()
+    : collect();
         return view('frontend.pesanan', compact('pesanans'));
     }
 
@@ -43,19 +48,6 @@ class FrontendController extends Controller
         $user = auth()->user();
         $profile = $user->profile;
         return view('frontend.profile', compact('user', 'profile'));
-    }
-
-    public function pesananDetail($id)
-    {
-        $user = auth()->user();
-        $pesanan = Pesanan::with(['items.obat', 'profile'])->findOrFail($id);
-
-        // Hanya pemilik pesanan yang boleh melihat
-        if ($pesanan->profile->user_id !== $user->id) {
-            abort(403, 'Tidak diizinkan mengakses pesanan ini.');
-        }
-
-        return view('frontend.pesanan-detail', compact('pesanan'));
     }
 
     // ✅ Method untuk handle form pengajuan resep

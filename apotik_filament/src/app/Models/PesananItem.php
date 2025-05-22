@@ -17,9 +17,9 @@ class PesananItem extends Model
     ];
 
     public function obat()
-    {
-        return $this->belongsTo(Obat::class);
-    }
+{
+    return $this->belongsTo(Obat::class);
+}
 
     public function pesanan()
     {
