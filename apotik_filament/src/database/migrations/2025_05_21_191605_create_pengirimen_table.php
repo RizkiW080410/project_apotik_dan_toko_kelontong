@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('pengirimen', function (Blueprint $table) {
             $table->id();
             $table->foreignId('pesanan_id')->constrained('pesanans');
-            $table->foreignId('pengirim_id')->constrained('pengirims');
+            $table->foreignId('pengirim_id')->nullable()->constrained('pengirims');
             $table->string('alamat');
             $table->decimal('jarak', 8, 2);
             $table->decimal('total', 10, 2);

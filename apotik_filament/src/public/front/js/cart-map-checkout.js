@@ -1,3 +1,5 @@
+let leafletMap = null;
+
 document.addEventListener("DOMContentLoaded", function () {
   let cartCount = 0;
   const badge = document.getElementById("cart-badge");
@@ -93,6 +95,7 @@ document.addEventListener("DOMContentLoaded", function () {
     checkoutBtn.addEventListener("click", () => {
       const alamat = alamatTextarea.value.trim();
       if (!alamat) return alert("Alamat harus diisi.");
+
       const cart = cartItems.tanpa.map((item) => ({ obat_id: item.obat_id, qty: item.qty }));
 
       fetch("/checkout", {
@@ -103,28 +106,36 @@ document.addEventListener("DOMContentLoaded", function () {
         },
         body: JSON.stringify({ cart, ongkir: cartOngkir, alamat, jarak: cartJarak }),
       })
-        .then((res) => res.json())
+        .then((res) => res.json().then(data => {
+          if (!res.ok) throw new Error(data.message || "Terjadi kesalahan.");
+          return data;
+        }))
         .then((res) => {
-          if (res.message) {
-            Swal.fire({ icon: "success", title: "Pesanan berhasil!", text: res.message }).then(() => {
-              cartItems.tanpa = [];
-              renderCartList();
-              updateCartTotal();
-              updateCartBadge();
-              window.location.href = "/pesanan";
-            });
-          } else {
-            Swal.fire({ icon: "error", title: "Gagal", text: res.error || "Terjadi kesalahan saat checkout." });
-          }
+          Swal.fire({
+            icon: "success",
+            title: "Pesanan berhasil!",
+            text: res.message,
+            timer: 2000,
+            showConfirmButton: false
+          }).then(() => {
+            cartItems.tanpa = [];
+            renderCartList();
+            updateCartTotal();
+            updateCartBadge();
+            window.location.href = "/pesanan";
+          });
         })
         .catch((err) => {
-          console.error(err);
-          Swal.fire({ icon: "error", title: "Gagal", text: "Terjadi kesalahan saat checkout." });
+          console.error("Gagal fetch /checkout:", err);
+          Swal.fire({
+            icon: "error",
+            title: "Gagal",
+            text: err.message || "Terjadi kesalahan saat menghubungi server."
+          });
         });
     });
   }
 
-  // Map Initialization
   const sidebar = document.getElementById("cartSidebarTanpaResep");
   if (sidebar) {
     sidebar.addEventListener("shown.bs.offcanvas", function () {
@@ -136,13 +147,18 @@ document.addEventListener("DOMContentLoaded", function () {
     const mapElement = document.getElementById(mapId);
     if (!mapElement) return;
 
+    if (leafletMap !== null) {
+      leafletMap.remove();
+    }
+
     const tokoLat = -6.246761;
     const tokoLng = 106.729114;
-    const map = L.map(mapId).setView([tokoLat, tokoLng], 13);
+
+    leafletMap = L.map(mapId).setView([tokoLat, tokoLng], 13);
 
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution: "&copy; OpenStreetMap contributors",
-    }).addTo(map);
+    }).addTo(leafletMap);
 
     const apotekIcon = L.icon({
       iconUrl: "https://cdn-icons-png.flaticon.com/512/149/149060.png",
@@ -154,22 +170,22 @@ document.addEventListener("DOMContentLoaded", function () {
       iconSize: [36, 36], iconAnchor: [18, 36],
     });
 
-    L.marker([tokoLat, tokoLng], { icon: apotekIcon }).addTo(map).bindPopup("Lokasi Apotek");
+    L.marker([tokoLat, tokoLng], { icon: apotekIcon }).addTo(leafletMap).bindPopup("Lokasi Apotek");
 
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(function (position) {
         const userLat = position.coords.latitude;
         const userLng = position.coords.longitude;
 
-        L.marker([userLat, userLng], { icon: userIcon }).addTo(map).bindPopup("Lokasi Anda");
+        L.marker([userLat, userLng], { icon: userIcon }).addTo(leafletMap).bindPopup("Lokasi Anda");
 
         fetch(`https://router.project-osrm.org/route/v1/driving/${userLng},${userLat};${tokoLng},${tokoLat}?overview=full&geometries=geojson`)
           .then((res) => res.json())
           .then((data) => {
             if (data.routes?.length) {
               const route = data.routes[0];
-              L.geoJSON(route.geometry, { style: { color: "blue", weight: 4 } }).addTo(map);
-              map.fitBounds([[userLat, userLng], [tokoLat, tokoLng]]);
+              L.geoJSON(route.geometry, { style: { color: "blue", weight: 4 } }).addTo(leafletMap);
+              leafletMap.fitBounds([[userLat, userLng], [tokoLat, tokoLng]]);
 
               const distanceInKm = route.distance / 1000;
               cartJarak = parseFloat(distanceInKm.toFixed(2));
@@ -189,6 +205,6 @@ document.addEventListener("DOMContentLoaded", function () {
       alert("Geolocation tidak didukung oleh browser Anda.");
     }
 
-    setTimeout(() => map.invalidateSize(), 300);
+    setTimeout(() => leafletMap.invalidateSize(), 300);
   }
 });

@@ -6,39 +6,47 @@
   <div class="row justify-content-center">
     <div class="col-md-10 col-lg-8">
 
-      <!-- Card Pengajuan 1: Dengan Resep -->
-      <div class="card border-0 shadow-sm mb-3">
-        <div class="card-body d-flex justify-content-between align-items-center">
-          <div>
-            <div><strong>ID Pengajuan:</strong> #PJ001</div>
-            <div class="mb-1">
-              <span class="badge bg-primary px-2 py-1">Pesanan dengan Resep Dokter</span>
-            </div>
-            <!-- <div><strong>Status:</strong> <span class="badge bg-danger text-white">Menunggu Pembayaran</span></div> -->
-            <div><strong>Tanggal:</strong> 18 Mei 2025</div>
-          </div>
-          <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalPesananResep">Lihat Detail</button>
-        </div>
-      </div>
+      @forelse ($pesanans as $pesanan)
+        <div class="card border-0 shadow-sm mb-3">
+          <div class="card-body d-flex justify-content-between align-items-center">
+            <div>
+              <div>
+                <strong>{{ $pesanan->pengajuan_id ? 'ID Pengajuan:' : 'ID Pesanan:' }}</strong>
+                #{{ $pesanan->nomor_pesanan }}
+              </div>
 
-      <!-- Card Pengajuan 2: Tanpa Resep -->
-      <div class="card border-0 shadow-sm mb-3">
-        <div class="card-body d-flex justify-content-between align-items-center">
-          <div>
-            <div><strong>ID Pesanan:</strong> #PJ002</div>
-            <div class="mb-1">
-              <span class="badge bg-success px-2 py-1">Pesanan Tanpa Resep Dokter</span>
+              <div class="mb-1">
+                <span class="badge {{ $pesanan->pengajuan_id ? 'bg-primary' : 'bg-success' }} px-2 py-1">
+                  {{ $pesanan->pengajuan_id ? 'Pesanan dengan Resep Dokter' : 'Pesanan Tanpa Resep Dokter' }}
+                </span>
+              </div>
+
+              <div>
+                <strong>Tanggal:</strong>
+                {{ \Carbon\Carbon::parse($pesanan->tanggal)->translatedFormat('d F Y') }}
+              </div>
+
+              <div>
+                <strong>Total:</strong>
+                Rp{{ number_format($pesanan->total, 0, ',', '.') }}
+              </div>
             </div>
-            <!-- <div><strong>Status:</strong> <span class="badge bg-danger text-white">Menunggu Pembayaran</span></div> -->
-            <div><strong>Tanggal:</strong> 19 Mei 2025</div>
+
+            <a href="{{ route('pesanan.show', $pesanan->id) }}" class="btn btn-outline-primary">
+              Lihat Detail
+            </a>
           </div>
-          <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalPesananNonResep">Lihat Detail</button>
         </div>
-      </div>
+      @empty
+        <div class="alert alert-info text-center">
+          Belum ada pesanan.
+        </div>
+      @endforelse
 
     </div>
   </div>
 </section>
+
 
 
 <!-- Modal untuk Pesanan dengan Resep -->

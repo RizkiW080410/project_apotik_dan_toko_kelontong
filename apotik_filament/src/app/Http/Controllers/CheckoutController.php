@@ -8,14 +8,15 @@ use App\Models\Pengiriman;
 use App\Models\PesananItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Auth;
 
 class CheckoutController extends Controller
 {
     public function store(Request $request)
     {
-        $request->validate([
-            'cart' => 'required|array',
+        $validated = $request->validate([
+            'cart' => 'required|array|min:1',
             'cart.*.obat_id' => 'required|exists:obats,id',
             'cart.*.qty' => 'required|integer|min:1',
             'ongkir' => 'required|integer',
@@ -23,49 +24,75 @@ class CheckoutController extends Controller
             'jarak' => 'required|numeric',
         ]);
 
-        DB::beginTransaction();
-
         try {
-            // Ambil profile pengguna
-            $profile = Auth::user()->profile;
+            $user = Auth::user()->load('profile');
+            $profile = $user->profile;
 
             if (!$profile) {
-                return response()->json(['message' => 'Profil pengguna tidak ditemukan.'], 400);
+                $profile = $user->profile()->create([
+                    'nama_lengkap' => $user->name,
+                    'nomor_telepon' => '-',
+                    'jenis_kelamin' => 'Laki-laki',
+                    'tanggal_lahir' => now()->subYears(20),
+                ]);
             }
 
-            // Buat pesanan
+            DB::beginTransaction();
+
             $pesanan = new Pesanan();
             $pesanan->profile_id = $profile->id;
             $pesanan->tanggal = now();
             $pesanan->status = 'menunggu';
-            $pesanan->save(); // nomor_pesanan dan total akan diisi otomatis lewat model event
+            $pesanan->total = 0; // sementara
+            $pesanan->save();
 
-            // Simpan item
-            foreach ($request->cart as $item) {
+            // Generate nomor pesanan manual setelah save (gunakan ID)
+            $pesanan->nomor_pesanan = 'PSN-' . str_pad($pesanan->id, 6, '0', STR_PAD_LEFT);
+            $pesanan->save();
+
+            $totalProduk = 0;
+
+            foreach ($validated['cart'] as $item) {
                 $obat = Obat::findOrFail($item['obat_id']);
+                $subtotal = $obat->harga * $item['qty'];
+                $totalProduk += $subtotal;
+
                 PesananItem::create([
                     'pesanan_id' => $pesanan->id,
                     'obat_id' => $obat->id,
                     'qty' => $item['qty'],
-                    'total' => $obat->harga * $item['qty'],
+                    'total' => $subtotal,
                 ]);
             }
 
-            // Buat pengiriman
+            $pesanan->total = $totalProduk + $validated['ongkir'];
+            $pesanan->save();
+
             Pengiriman::create([
                 'pesanan_id' => $pesanan->id,
-                'alamat' => $request->alamat,
-                'jarak' => $request->jarak,
-                'total' => $request->ongkir,
+                'alamat' => $validated['alamat'],
+                'jarak' => $validated['jarak'],
+                'total' => $validated['ongkir'],
                 'status' => 'menunggu',
+                'pengirim_id' => null,
             ]);
 
             DB::commit();
 
-            return response()->json(['message' => 'Pesanan berhasil dibuat.'], 200);
+            return response()->json([
+                'message' => 'Pesanan berhasil dibuat.'
+            ], 200);
+
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['message' => 'Gagal membuat pesanan', 'error' => $e->getMessage()], 500);
+            Log::error('Checkout Error', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json([
+                'message' => 'Gagal membuat pesanan',
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
 }

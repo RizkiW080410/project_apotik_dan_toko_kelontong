@@ -71,11 +71,9 @@
 
         </div>
       </div>
-
     </div>
   </div>
 </section>
-
 <!-- End konten carosel di awal -->
 
 
@@ -304,7 +302,6 @@
         </div>
       </div>
     </div>
-
   </div>
 </section>
 <!-- End Populer product -->

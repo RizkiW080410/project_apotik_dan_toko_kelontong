@@ -45,17 +45,6 @@ class Pesanan extends Model
                 $pesanan->nomor_pesanan = 'PSN-' . str_pad($nextId, 6, '0', STR_PAD_LEFT);
             }
         });
-
-        static::saving(function ($pesanan) {
-            // Hitung total dari item
-            $total = 0;
-            if ($pesanan->items) {
-                foreach ($pesanan->items as $item) {
-                    $total += $item->total ?? 0;
-                }
-            }
-            $pesanan->total = $total;
-        });
     }
 
     protected $with = ['items'];

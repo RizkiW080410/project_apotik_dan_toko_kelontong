@@ -29,6 +29,8 @@ class Pengajuan extends Model
         return $this->belongsTo(Profile::class);
     }
 
+
+
     /**
      * Relasi ke Pesanan (jika ada pesanan yang dibuat dari pengajuan ini).
      */

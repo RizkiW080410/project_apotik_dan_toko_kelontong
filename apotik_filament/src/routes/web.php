@@ -34,7 +34,12 @@ Route::middleware(['auth'])->group(function () {
     
     Route::get('/pesananresep', [FrontendController::class, 'pesananresep']);
     Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
-    Route::get('/pengajuan', [FrontendController::class, 'pengajuan']);
+    Route::get('/pengajuan', [FrontendController::class, 'pengajuan'])->name('frontend.pengajuan');
     Route::get('/pesanan', [FrontendController::class, 'pesanan']);
+    Route::get('/pesanan/{id}', [FrontendController::class, 'pesananDetail'])->name('pesanan.show');
+    Route::post('/pesananresep/kirim', [FrontendController::class, 'submitPesananResep'])->name('pesananresep.submit');
     Route::get('/profile', [FrontendController::class, 'profile']);
 });
+
+
+
