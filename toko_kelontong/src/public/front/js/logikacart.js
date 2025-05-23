@@ -1,247 +1,265 @@
-let cartCount = 0;
+// logikacart.js
+
 let cartItems = {};
+let lastOrderIdFull = null;
 
-const loginModalElement = document.getElementById('loginModal');
-const loginModal = new bootstrap.Modal(loginModalElement);
-const registerModal = new bootstrap.Modal(document.getElementById('registerModal'));
-const cartOffcanvasElement = document.getElementById('cartSidebar');
-const cartOffcanvas = new bootstrap.Offcanvas(cartOffcanvasElement);
-const checkoutModalElement = document.getElementById('checkoutModal');
-const checkoutModal = new bootstrap.Modal(checkoutModalElement);
-const orderStatusModalElement = document.getElementById('orderStatusModal');
-const orderStatusModal = new bootstrap.Modal(orderStatusModalElement);
-const orderIcon = document.getElementById('orderIcon');
-const successModalElement = document.getElementById('successModal');
-const successModal = new bootstrap.Modal(successModalElement);
+const cartOffcanvas    = new bootstrap.Offcanvas(document.getElementById('cartSidebar'));
+const checkoutModal    = new bootstrap.Modal(document.getElementById('checkoutModal'));
+const orderStatusModal = new bootstrap.Modal(document.getElementById('orderStatusModal'));
+const successModal     = new bootstrap.Modal(document.getElementById('successModal'));
 
-document.addEventListener('DOMContentLoaded', function () {
-    const addButtons = document.querySelectorAll('.btn-add-to-cart');
+document.addEventListener('DOMContentLoaded', () => {
+  // — tombol “Add to cart”
+  document.querySelectorAll('.btn-add-to-cart').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id     = btn.dataset.id;
+      const name   = btn.dataset.name;
+      const price  = parseInt(btn.dataset.price, 10);
+      const imgSrc = btn.dataset.image;
+      const img    = btn.closest('.product').querySelector('.product-img');
 
-    addButtons.forEach((btn) => {
-        btn.addEventListener('click', function () {
-            const productId = this.getAttribute('data-id');
-            const name = this.getAttribute('data-name');
-            const price = this.getAttribute('data-price');
-            const imgSrc = this.getAttribute('data-image');
-            const img = this.closest('.product').querySelector('.product-img');
-
-            animateToCart(img);
-            cartCount++;
-            const badge = document.getElementById('cartBadge');
-            badge.classList.remove('d-none');
-            badge.innerText = cartCount;
-            badge.classList.add('bounce-badge');
-            setTimeout(() => badge.classList.remove('bounce-badge'), 600);
-
-            updateCartSidebar(productId, name, price, imgSrc);
-        });
+      animateToCart(img);
+      addToCart(id, name, price, imgSrc);
     });
+  });
 
-    document.querySelectorAll('.open-cart').forEach(btn => {
-        btn.addEventListener('click', function (e) {
-            e.preventDefault();
-            cartOffcanvas.show();
-        });
+  // — buka sidebar keranjang
+  document.querySelectorAll('.open-cart').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.preventDefault();
+      cartOffcanvas.show();
     });
+  });
 
-    orderIcon.addEventListener('click', function (e) {
-        e.preventDefault();
-        orderStatusModal.show();
+  // — buka modal status pesanan
+  const orderIcon = document.getElementById('orderIcon');
+  if (orderIcon) {
+    orderIcon.addEventListener('click', e => {
+      e.preventDefault();
+      orderStatusModal.show();
     });
+  }
 
-    document.getElementById('orderForm').addEventListener('submit', function (e) {
-        e.preventDefault();
-        buatPesanan();
-    });
+  // — submit checkout
+  document.getElementById('orderForm')
+          .addEventListener('submit', e => {
+    e.preventDefault();
+    buatPesanan();
+  });
 
-    checkoutModalElement.addEventListener('show.bs.modal', function () {
-        const orderDetails = document.getElementById('orderDetails');
-        orderDetails.innerHTML = '';
-
-        let totalProduk = 0;
-
-        for (let id in cartItems) {
-            const item = cartItems[id];
-            const itemElement = document.createElement('div');
-            itemElement.className = 'd-flex justify-content-between mb-2';
-            itemElement.innerHTML = `
-                <div><strong>${item.name}</strong> x ${item.qty}</div>
-                <div>${formatRupiah(item.price * item.qty)}</div>
-            `;
-            orderDetails.appendChild(itemElement);
-            totalProduk += item.price * item.qty;
-        }
-
-        document.getElementById('totalProdukCheckout').innerText = formatRupiah(totalProduk);
-        document.getElementById('totalOngkirCheckout').innerText = formatRupiah(0);
-        document.getElementById('totalWithShipping').innerText = formatRupiah(totalProduk);
-        document.getElementById('checkoutTotal').innerText = formatRupiah(totalProduk);
-
-        setTimeout(() => {
-            initMapAndRoute();
-        }, 500);
-    });
+  // — saat checkout modal muncul, render detail + init map
+  document.getElementById('checkoutModal')
+          .addEventListener('show.bs.modal', () => {
+    renderCheckoutModal();
+    setTimeout(initMapAndRoute, 500);
+  });
 });
 
+// Animasi terbang ke cart
 function animateToCart(imgElement) {
-    const cartIcon = document.querySelector('.open-cart i');
-    const imgClone = imgElement.cloneNode(true);
-    const imgRect = imgElement.getBoundingClientRect();
-    const cartRect = cartIcon.getBoundingClientRect();
+  const cartIcon = document.querySelector('.open-cart i');
+  const imgClone = imgElement.cloneNode(true);
+  const from    = imgElement.getBoundingClientRect();
+  const to      = cartIcon.getBoundingClientRect();
 
-    imgClone.style.position = 'fixed';
-    imgClone.style.left = imgRect.left + 'px';
-    imgClone.style.top = imgRect.top + 'px';
-    imgClone.style.width = imgRect.width + 'px';
-    imgClone.style.height = imgRect.height + 'px';
-    imgClone.style.zIndex = 9999;
-    imgClone.style.transition = 'all 0.8s ease-in-out';
+  Object.assign(imgClone.style, {
+    position:   'fixed',
+    left:       `${from.left}px`,
+    top:        `${from.top}px`,
+    width:      `${from.width}px`,
+    height:     `${from.height}px`,
+    zIndex:     9999,
+    transition: 'all 0.8s ease-in-out'
+  });
+  document.body.appendChild(imgClone);
 
-    document.body.appendChild(imgClone);
+  setTimeout(() => {
+    Object.assign(imgClone.style, {
+      left:      `${to.left}px`,
+      top:       `${to.top}px`,
+      opacity:   '0',
+      transform: 'scale(0.1)'
+    });
+  }, 10);
 
-    setTimeout(() => {
-        imgClone.style.left = cartRect.left + 'px';
-        imgClone.style.top = cartRect.top + 'px';
-        imgClone.style.opacity = '0';
-        imgClone.style.transform = 'scale(0.1)';
-    }, 10);
-
-    setTimeout(() => {
-        imgClone.remove();
-    }, 900);
+  setTimeout(() => imgClone.remove(), 900);
 }
 
-function updateCartSidebar(productId, name, price, imgSrc) {
-    const sidebarBody = document.getElementById('cartSidebarBody');
-    let item = document.querySelector(`#sidebar-item-${productId}`);
+// ——— Cart logic ———
 
-    if (item) {
-        updateQty(productId, 1);
-        return;
-    }
-
-    item = document.createElement('div');
-    item.className = "d-flex justify-content-between align-items-center mb-3";
-    item.id = `sidebar-item-${productId}`;
-    item.innerHTML = `
-        <div class="d-flex align-items-start gap-2">
-          <img src="${imgSrc}" alt="${name}" width="50" height="50" style="object-fit:cover; border-radius:8px;">
-          <div>
-            <strong>${name}</strong><br>
-            <small class="text-muted">Rp${parseInt(price).toLocaleString()}</small>
-          </div>
-        </div>
-        <div class="d-flex align-items-center gap-1">
-          <button class="btn btn-sm btn-outline-secondary" onclick="updateQty('${productId}', -1)">−</button>
-          <span id="qty-${productId}">1</span>
-          <button class="btn btn-sm btn-outline-secondary" onclick="updateQty('${productId}', 1)">+</button>
-        </div>
-    `;
-    sidebarBody.appendChild(item);
-
-    cartItems[productId] = {
-        name,
-        price: parseInt(price),
-        qty: 1
-    };
-
-    updateTotal();
+function addToCart(id, name, price, imgSrc) {
+  if (!cartItems[id]) {
+    cartItems[id] = { name, price, qty: 1, imgSrc };
+  } else {
+    cartItems[id].qty++;
+  }
+  updateCartUI();
 }
 
-function updateQty(productId, change) {
-    const qtyElement = document.getElementById(`qty-${productId}`);
-    const currentQty = parseInt(qtyElement.innerText);
-    const newQty = currentQty + change;
+function changeQty(id, delta) {
+  if (!cartItems[id]) return;
+  cartItems[id].qty += delta;
+  if (cartItems[id].qty < 1) {
+    delete cartItems[id];
+  }
+  updateCartUI();
+}
 
-    if (newQty < 1) {
-        const itemElement = document.getElementById(`sidebar-item-${productId}`);
-        if (itemElement) itemElement.remove();
-        cartCount -= currentQty;
-        if (cartCount <= 0) {
-            cartCount = 0;
-            document.getElementById('cartBadge').classList.add('d-none');
-        } else {
-            document.getElementById('cartBadge').innerText = cartCount;
-        }
-        delete cartItems[productId];
-    } else {
-        qtyElement.innerText = newQty;
-        cartItems[productId].qty = newQty;
-        cartCount += change;
-        document.getElementById('cartBadge').innerText = cartCount;
-    }
+function updateCartUI() {
+  renderSidebar();
+  updateTotal();
+  updateCartBadge();
+}
 
-    updateTotal();
+function renderSidebar() {
+  const body = document.getElementById('cartSidebarBody');
+  body.innerHTML = '';
+  Object.entries(cartItems).forEach(([id, item]) => {
+    const el = document.createElement('div');
+    el.id = `sidebar-item-${id}`;
+    el.className = 'd-flex justify-content-between align-items-center mb-3';
+    el.innerHTML = `
+      <div class="d-flex align-items-start gap-2">
+        <img src="${item.imgSrc}" width="50" height="50" style="object-fit:cover;border-radius:8px;">
+        <div><strong>${item.name}</strong><br><small class="text-muted">Rp${item.price.toLocaleString()}</small></div>
+      </div>
+      <div class="d-flex align-items-center gap-1">
+        <button class="btn btn-sm btn-outline-secondary" onclick="changeQty('${id}', -1)">−</button>
+        <span id="qty-${id}">${item.qty}</span>
+        <button class="btn btn-sm btn-outline-secondary" onclick="changeQty('${id}', 1)">+</button>
+      </div>`;
+    body.appendChild(el);
+  });
 }
 
 function updateTotal() {
-    const totalElement = document.getElementById('cartTotal');
-    let total = 0;
-    for (let id in cartItems) {
-        total += cartItems[id].price * cartItems[id].qty;
-    }
-    totalElement.innerText = "Rp" + total.toLocaleString();
+  const sum = Object.values(cartItems)
+                    .reduce((acc, it) => acc + it.price * it.qty, 0);
+  document.getElementById('cartTotal').innerText = `Rp${sum.toLocaleString()}`;
 }
+
+function updateCartBadge() {
+  const totalQty = Object.values(cartItems)
+                         .reduce((acc, it) => acc + it.qty, 0);
+  const badge = document.getElementById('cartBadge');
+  if (totalQty > 0) {
+    badge.innerText = totalQty;
+    badge.classList.remove('d-none');
+  } else {
+    badge.classList.add('d-none');
+  }
+}
+
+// ——— Render checkout modal detail ———
+
+function renderCheckoutModal() {
+  const det = document.getElementById('orderDetails');
+  det.innerHTML = '';
+  let totalProduk = 0;
+
+  Object.values(cartItems).forEach(item => {
+    const row = document.createElement('div');
+    row.className = 'd-flex justify-content-between mb-2';
+    row.innerHTML = `<div><strong>${item.name}</strong> x ${item.qty}</div>
+                     <div>${formatRupiah(item.price * item.qty)}</div>`;
+    det.appendChild(row);
+    totalProduk += item.price * item.qty;
+  });
+
+  document.getElementById('totalProdukCheckout').innerText = formatRupiah(totalProduk);
+
+  // shipping cost sudah diisi oleh map.js
+  const ongkir = parseInt(
+    (document.getElementById('shippingCost').value || '')
+      .replace(/\D/g, ''),
+    10
+  ) || 0;
+
+  document.getElementById('totalOngkirCheckout').innerText = formatRupiah(ongkir);
+  document.getElementById('totalWithShipping').innerText = formatRupiah(totalProduk + ongkir);
+  document.getElementById('checkoutTotal').innerText   = formatRupiah(totalProduk + ongkir);
+}
+
+// … selanjutnya fungsi buatPesanan(), handleMidtransResult(), initMapAndRoute(), formatRupiah() …
+
 
 function buatPesanan() {
-    const items = [];
-    for (let id in cartItems) {
-        items.push({
-            id,
-            qty: cartItems[id].qty,
-            price: cartItems[id].price
-        });
+  const items  = Object.entries(cartItems).map(([id,i]) => ({ id: parseInt(id), qty: i.qty, price: i.price }));
+  const alamat = document.getElementById('userAddress').value.trim();
+  const jarak  = parseFloat(document.getElementById('distance').value) || 0;
+  const ongkir = parseInt(document.getElementById('shippingCost').value.replace(/\D/g,''),10) || 0;
+  const total  = items.reduce((sum,i)=>sum + i.qty*i.price,0) + ongkir;
+
+  fetch('/checkout', {
+    method: 'POST',
+    credentials: 'same-origin',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept':       'application/json',
+      'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+    },
+    // kirim sesuai validasi controller
+    body: JSON.stringify({ cart: items, alamat, jarak, ongkir, total })
+  })
+  .then(res => {
+    if (!res.ok) return res.json().then(err => { throw err });
+    return res.json();
+  })
+  .then(data => {
+    lastOrderIdFull = data.order_id_full;
+    window.snap.pay(data.snap_token, {
+      onSuccess: handleMidtransResult,
+      onPending: handleMidtransResult,
+      onError:   () => alert('Pembayaran gagal.'),
+      onClose:   () => alert('Anda belum menyelesaikan pembayaran.')
+    });
+  })
+  .catch(err => {
+    console.error('Checkout error detail:', err);
+    const msg = err.message || (err.errors ? Object.values(err.errors).flat().join('\n') : 'Terjadi kesalahan.');
+    alert('Gagal membuat pesanan:\n' + msg);
+  });
+}
+
+
+function handleMidtransResult(result) {
+  fetch('/checkout/status', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+    },
+    body: JSON.stringify({
+      order_id_full:      lastOrderIdFull,
+      transaction_status: result.transaction_status
+    })
+  })
+  .then(r => r.json())
+  .then(js => {
+    if (js.success) {
+      // reset UI
+      cartItems = {};
+      cartCount = 0;
+      document.getElementById('cartBadge').classList.add('d-none');
+      cartOffcanvas.hide();
+      checkoutModal.hide();
+      successModal.show();
+    } else {
+      alert('Gagal update status: ' + js.message);
     }
-
-    const alamat = document.getElementById('userAddress').value.trim();
-    const jarak = parseFloat(document.getElementById('distance').value || 0);
-    const ongkir = parseInt(document.getElementById('shippingCost').value.replace(/\D/g, '')) || 0;
-    const total = Object.values(cartItems).reduce((sum, item) => sum + item.qty * item.price, 0) + ongkir;
-
-    fetch('/checkout', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-        },
-        body: JSON.stringify({
-            items, alamat, jarak, ongkir, total
-        })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success && data.snap_token) {
-            // Panggil Midtrans Snap
-            window.snap.pay(data.snap_token, {
-                onSuccess: function (result) {
-                    // Berhasil bayar
-                    cartItems = {};
-                    cartCount = 0;
-                    document.getElementById('cartBadge').classList.add('d-none');
-                    cartOffcanvas.hide();
-                    checkoutModal.hide();
-                    successModal.show();
-                },
-                onPending: function (result) {
-                    alert("Pembayaran sedang diproses...");
-                },
-                onError: function (result) {
-                    alert("Pembayaran gagal. Silakan coba lagi.");
-                },
-                onClose: function () {
-                    alert("Anda belum menyelesaikan pembayaran.");
-                }
-            });
-        } else {
-            alert('Gagal membuat pesanan.');
-        }
-    })
-    .catch(() => alert('Terjadi kesalahan saat membuat pesanan.'));
+  })
+  .catch(err => {
+    console.error('Error update status', err);
+    alert('Error menghubungi server saat update status.');
+  });
 }
 
-function formatRupiah(angka) {
-    return 'Rp' + angka.toLocaleString('id-ID');
+function formatRupiah(a) {
+  return 'Rp' + a.toLocaleString('id-ID');
 }
+
+// … (initMapAndRoute tetap sama seperti sebelumnya) …
+
 
 function updateCheckoutTotal(ongkir) {
     const totalProdukElement = document.getElementById('totalProdukCheckout');

@@ -53,7 +53,7 @@
                 </div>
 
                 <div class="alert alert-info small py-2 px-3 mb-3" role="alert">
-                  {{ $pengajuan->status === 'menunggu' ? '⏳ Tunggu ya, pengajuanmu sedang diproses.' : '✅ Pengajuanmu sudah dikonfirmasi.' }}
+                  {{ $pengajuan->status === 'menunggu' ? '⏳ Tunggu ya, pengajuanmu sedang diproses.' : '✅ Pengajuan mu sudah di konfirmasi oleh admin silahkan cek halaman pesanan untuk membayar tagihan.' }}
                 </div>
 
                 <!-- Foto Resep -->

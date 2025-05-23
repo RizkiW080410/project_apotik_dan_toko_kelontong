@@ -36,12 +36,14 @@ class Pesanan extends Model
 
     protected static function booted()
     {
-        // Generate nomor_pesanan saat create
+
         static::creating(function ($pesanan) {
-            $lastPesanan = self::orderBy('id', 'desc')->first();
-            $lastNumber = $lastPesanan ? intval(substr($lastPesanan->nomor_pesanan, 2)) : 0;
-            $pesanan->nomor_pesanan = 'P-' . str_pad($lastNumber + 1, 8, '0', STR_PAD_LEFT);
-        });
+        $last = self::orderBy('id','desc')->first();
+        $n    = $last
+            ? intval(substr($last->nomor_pesanan, 4)) + 1
+            : 1;
+        $pesanan->nomor_pesanan = 'PSN-'.str_pad($n, 6, '0', STR_PAD_LEFT);
+    });
 
         static::updated(function ($pesanan) {
             $pesanan->recalculateTotal();

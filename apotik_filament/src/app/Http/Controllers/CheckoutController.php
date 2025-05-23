@@ -22,7 +22,7 @@ class CheckoutController extends Controller
         Config::$serverKey    = config('midtrans.server_key');
         Config::$isProduction = config('midtrans.is_production');
         Config::$isSanitized  = config('midtrans.is_sanitized');
-        Config::$is3ds        = config('midtrans.is_3ds');
+        Config::$is3ds        = config('midtrans    .is_3ds');
     }
 
     /**

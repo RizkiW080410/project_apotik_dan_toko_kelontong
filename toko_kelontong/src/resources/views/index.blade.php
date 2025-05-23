@@ -12,9 +12,6 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet" />
   <!-- Google Fonts: Montserrat -->
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
-    integrity="sha512-xodZBNTC5n17Xt2atTPvknHGJwWtJx7nfHpIzgIpzgievIL/P+pWIerlbEgnVVFIwy6NUhNJbzTjxleJRlnXYA=="
-    crossorigin=""/>
 
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <!-- Custom CSS -->
@@ -205,7 +202,13 @@
             <div class="d-flex justify-content-between align-items-center">
               <div>
                 <div class="fw-bold text-success">#{{ $pesanan->nomor_pesanan }}</div>
-                <small class="text-muted">Total: Rp{{ number_format($pesanan->total, 0, ',', '.') }}</small>
+                @php
+                  $itemSum = $pesanan->items->sum('total');
+                  $ship    = optional($pesanan->pengiriman)->total ?? 0;
+                @endphp
+                <small class="text-muted">
+                  Total: Rp{{ number_format($itemSum + $ship, 0, ',', '.') }}
+                </small>
                 <br>
                 <small>Status: {{ ucfirst($pesanan->status) }}</small>
               </div>
@@ -254,12 +257,15 @@
             <p class="text-muted">Belum dikirim</p>
           @endif
             <div class="d-flex justify-content-between border-bottom py-2">
-              <div>
-                <div class="fw-semibold">Total :</div>
-              </div>
-              <div>Rp{{ number_format($pesanan->total, 0, ',', '.') }}</div>
+            <div>
+              <div class="fw-semibold">Total Keseluruhan:</div>
             </div>
-
+            <div>Rp{{ number_format(
+                  $pesanan->items->sum('total')
+                + optional($pesanan->pengiriman)->total, 
+                0, ',', '.') }}
+            </div>
+          </div>
           <div class="mt-3">
             <h6 class="fw-bold">Alamat Pengiriman:</h6>
             @if ($pesanan->pengiriman)
@@ -407,176 +413,111 @@
 
     <!-- Kategori populer Section -->
     <section id="kategori" class="py-5 bg-light">
-        <div class="container">
-        <!-- Judul dan Tombol Panah -->
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h4 class="fw-bold text-dark mb-0">Kategori populer</h4>
-            <div class="d-flex gap-2">
-                <button id="scrollLeft" class="scroll-button btn rounded-circle d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
-                    <i class="bi bi-chevron-left"></i>
-                  </button>
-                  <button id="scrollRight" class="scroll-button btn rounded-circle d-flex align-items-center justify-content-center" style="width: 36px; height: 36px;">
-                    <i class="bi bi-chevron-right"></i>
-                  </button> 
-            </div>
-        </div>
-    
-        <!-- Kategori Scroll -->
-        <div class="scroll-wrapper">
-        <div id="categoryScroll" class=" scroll-container  d-flex overflow-auto gap-4 pb-3">
-            <!-- Item Kategori -->
-            <div class="text-center show shadow-sm rounded-3 p-3 flex-shrink-0 " style="width: 150px; background-color: #88C273;">
-                <div class="mb-2 overflow-hidden rounded" style="width: 100%; height: 80px; ">
-                <img src="front/assets/susu.png" alt="Cake & Milk" style="width: 100%; height: 100%; object-fit: cover; " />
-                </div>
-                <h6 class="fw-semibold mb-0">Susu diamon uht</h6>
-                <small class="text-muted">15 items</small>
-            </div>
-
-            <div class="text-center  shadow-sm rounded-3 p-3 flex-shrink-0" style="width: 150px; background-color: #FFF1DB;">
-                <div class="mb-2 overflow-hidden rounded" style="width: 100%; height: 80px; ">
-                <img src="front/assets/indomi.png" alt="Cake & Milk" style="width: 100%; height: 100%; object-fit: cover; " />
-                </div>
-                <h6 class="fw-semibold mb-0">Indomie Pack</h6>
-                <small class="text-muted">11 items</small>
-            </div>
-    
-            <div class="text-center  shadow-sm rounded-3 p-3 flex-shrink-0" style="width: 150px; background-color: #88C273;">
-                <div class="mb-2 overflow-hidden rounded" style="width: 100%; height: 80px; ">
-                <img src="front/assets/galon.png" alt="Cake & Milk" style="width: 100%; height: 100%; object-fit: cover; " />
-                </div>
-                <h6 class="fw-semibold mb-0">Galon aqua</h6>
-                <small class="text-muted">25 items</small>
-            </div>
-
-            <div class="text-center  shadow-sm rounded-3 p-3 flex-shrink-0" style="width: 150px; background-color: #FFF1DB;">
-                <div class="mb-2 overflow-hidden rounded" style="width: 100%; height: 80px; ">
-                <img src="front/assets/roko.png" alt="Cake & Milk" style="width: 100%; height: 100%; object-fit: cover; " />
-                </div>
-                <h6 class="fw-semibold mb-0">Sampoerna mild</h6>
-                <small class="text-muted">31 items</small>
-            </div>
-    
-            <div class="text-center  shadow-sm rounded-3 p-3 flex-shrink-0" style="width: 150px; background-color: #88C273;">
-                <div class="mb-2 overflow-hidden rounded" style="width: 100%; height: 80px; ">
-                <img src="front/assets/tepung.png" alt="Cake & Milk" style="width: 100%; height: 100%; object-fit: cover; " />
-                </div>
-                <h6 class="fw-semibold mb-0">Tepung</h6>
-                <small class="text-muted">11 items</small>
-            </div>
-
-            <div class="text-center  shadow-sm rounded-3 p-3 flex-shrink-0" style="width: 150px; background-color: #FFF1DB;">
-                <div class="mb-2 overflow-hidden rounded" style="width: 100%; height: 80px; ">
-                <img src="front/assets/kopi.png" alt="Cake & Milk" style="width: 100%; height: 100%; object-fit: cover; " />
-                </div>
-                <h6 class="fw-semibold mb-0">Kopi kapal api mix</h6>
-                <small class="text-muted">115 items</small>
-            </div>
-    
-            <div class="text-center  shadow-sm rounded-3 p-3 flex-shrink-0" style="width: 150px; background-color: #88C273;">
-                <div class="mb-2 overflow-hidden rounded" style="width: 100%; height: 80px; ">
-                <img src="front/assets/gas.png" alt="Cake & Milk" style="width: 100%; height: 100%; object-fit: cover; " />
-                </div>
-                <h6 class="fw-semibold mb-0">Gas 3kg</h6>
-                <small class="text-muted">31 items</small>
-            </div>
-
-            <div class="text-center  shadow-sm rounded-3 p-3 flex-shrink-0" style="width: 150px; background-color: #FFF1DB;">
-                <div class="mb-2 overflow-hidden rounded" style="width: 100%; height: 80px; ">
-                <img src="front/assets/minyak.png" alt="Cake & Milk" style="width: 100%; height: 100%; object-fit: cover; " />
-                </div>
-                <h6 class="fw-semibold mb-0">Minyak</h6>
-                <small class="text-muted">40 items</small>
-            </div>
-            <div class="text-center  shadow-sm rounded-3 p-3 flex-shrink-0" style="width: 150px; background-color: #88C273;">
-                <div class="mb-2 overflow-hidden rounded" style="width: 100%; height: 80px; ">
-                <img src="front/assets/endog.png" alt="Cake & Milk" style="width: 100%; height: 100%; object-fit: cover; " />
-                </div>
-                <h6 class="fw-semibold mb-0">Telur</h6>
-                <small class="text-muted">89 items</small>
-            </div>
-        </div>
+  <div class="container">
+    <!-- Judul dan Tombol Panah -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h4 class="fw-bold text-dark mb-0">Kategori populer</h4>
+      <div class="d-flex gap-2">
+        <button id="scrollLeft" class="scroll-button btn rounded-circle d-flex align-items-center justify-content-center" style="width:36px;height:36px">
+          <i class="bi bi-chevron-left"></i>
+        </button>
+        <button id="scrollRight" class="scroll-button btn rounded-circle d-flex align-items-center justify-content-center" style="width:36px;height:36px">
+          <i class="bi bi-chevron-right"></i>
+        </button>
+      </div>
     </div>
-        <!-- 2 Card Besar -->
-        <div class="row mt-4 g-4">
-            <!-- Kartu 1 -->
-            <div class="col-md-6">
-              <div class="p-5 rounded-4 d-flex align-items-center justify-content-between flex-lg-row flex-column-reverse promo-card left" style=" background-color: #FFF1DB; min-height: 260px;">
-                <div class="text-center text-lg-start">
-                  <h4 class="fw-bold mb-3" style="line-height: 1.5;">Setiap hari segar &<br>Bersih dengan produk kami</h4>
-                  <a href="#produk" class="btn btn-dark px-4 py-2 rounded-pill fw-semibold w-100 w-lg-auto">Shop now</a>
-                </div>
-                <img src="front/assets/naga.png" alt="Basket" class="img-fluid" style="max-height: 200px; object-fit: contain;" />
-              </div>
+    <!-- Kategori Scroll -->
+    <div class="scroll-wrapper">
+      <div id="categoryScroll" class="scroll-container d-flex overflow-auto gap-4 pb-3">
+        @foreach($popular as $cat)
+        @php
+            // ambil gambar contoh: pakai gambar produk pertama di kategori
+            $first = $cat->products()->first();
+            $img   = $first 
+                       ? asset('storage/'.$first->image) 
+                       : 'https://via.placeholder.com/150x80?text=No+Image';
+          @endphp
+        <div class="text-center shadow-sm rounded-3 p-3 flex-shrink-0" style="width:150px; background-color:#88C273">
+          <div class="mb-2 overflow-hidden rounded" style="width:100%;height:100px;">
+              <img src="{{ $img }}" alt="{{ $cat->name }}" style="width:100%;height:100%;object-fit:cover;">
             </div>
-          
-            <!-- Kartu 2 -->
-            <div class="col-md-6">
-              <div class="p-5 rounded-4 d-flex align-items-center justify-content-between flex-lg-row flex-column-reverse promo-card right" style=" background-color: #88C273; min-height: 260px;">
-                <div class="text-center text-lg-start">
-                  <h4 class="fw-bold mb-3" style="line-height: 1.5;">Buat sarapan mu<br>Sehat dan mudah </h4>
-                  <a href="#produk" class="btn btn-dark px-4 py-2 rounded-pill fw-semibold w-100 w-lg-auto">Shop now</a>
-                </div>
-                <img src="front/assets/nyarap.png" alt="Breakfast" class="img-fluid" style="max-height: 200px; object-fit: contain;" />
-              </div>
-            </div>
-          </div>
+          <h6 class="fw-semibold mb-1">{{ $cat->name }}</h6>
+          <small class="text-muted">{{ $cat->sold }} terjual</small>
         </div>
-    </section>
+      @endforeach
+      </div>
+    </div>
+  </div>
+</section>
+
 
    <!-- Produkk -->
-    <section id="produk" class="py-5 bg-white">
-        <div  class="container">
-      
-          <!-- Judul -->
-          <h2 class="fw-bold text-center mb-4" style="color: #064F4E;">Slamat datang di produk toko kami</h2>
-      
-          <!-- Filter Kategori -->
-          <div class="d-flex justify-content-center flex-wrap gap-2 mb-5">
-            <button class="btn btn-sm rounded-pill px-4 py-2 text-white fw-semibold" style="background-color: #A34B2B;">All Products</button>
-            <button class="btn btn-outline-secondary btn-sm rounded-pill px-4 py-2">🥤 Minuman</button>
-            <button class="btn btn-outline-secondary btn-sm rounded-pill px-4 py-2">🥬 Sayuran</button>
-            <button class="btn btn-outline-secondary btn-sm rounded-pill px-4 py-2">🥛 Susu</button>
-            <button class="btn btn-outline-secondary btn-sm rounded-pill px-4 py-2">🥩 Daging</button>
-            <button class="btn btn-outline-secondary btn-sm rounded-pill px-4 py-2">🌾 Tepung</button>
-            <button class="btn btn-outline-secondary btn-sm rounded-pill px-4 py-2">🛢️ Minyak</button>
-            <button class="btn btn-outline-secondary btn-sm rounded-pill px-4 py-2">🧂 Bumbu Masak</button>
-            <button class="btn btn-outline-secondary btn-sm rounded-pill px-4 py-2">🍜 Makanan Instan</button>
-          </div>
-          <!-- Kartu Produk -->
-        <div class="row g-4">
-          @foreach($products as $product)
-            <div class="col-6 col-md-4 col-lg-3 product">
-              <div class="border rounded-4 p-3 shadow-sm h-100 position-relative">
-                @if($loop->first)
-                  <span class="badge bg-info position-absolute top-0 start-0 m-2">New</span>
-                @endif
-                <div class="product-img-wrapper mb-3">
-                  <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" class="product-img" />
-                </div>
-                <small class="text-muted">{{ $product->category->name ?? 'Tanpa Kategori' }}</small>
-                <h6 class="fw-bold product-name">{{ $product->name }}</h6>
-                <p class="mb-1 text-muted small">{{ $product->brand }}</p>
-                <div class="d-flex justify-content-between align-items-center">
-                  <p class="product-price" data-price="{{ $product->harga }}">Rp{{ number_format($product->harga, 0, ',', '.') }}</p>
-                  @auth
-                     <button class="btn btn-sm btn-outline-dark rounded-pill d-flex align-items-center btn-add-to-cart"
-                              data-id="{{ $product->id }}"
-                              data-name="{{ $product->name }}"
-                              data-price="{{ $product->harga }}"
-                              data-image="{{ asset('storage/' . $product->image) }}">
-                        <i class="bi bi-cart me-1"></i> Add
-                      </button> 
-                  @endauth
-                </div>
-              </div>
+   <section id="produk" class="py-5 bg-white">
+  <div class="container">
+    <h2 class="fw-bold text-center mb-4" style="color: #064F4E;">
+      Selamat datang di produk toko kami
+    </h2>
+
+    <!-- Filter Kategori -->
+    <div class="d-flex justify-content-center flex-wrap gap-2 mb-5">
+      <button
+        class="btn btn-sm rounded-pill px-4 py-2 filter-btn active"
+        data-category-id=""
+      >All Products</button>
+
+      @foreach($categories as $cat)
+        <button
+          class="btn btn-sm btn-outline-secondary rounded-pill px-4 py-2 filter-btn"
+          data-category-id="{{ $cat->id }}"
+        >{{ $cat->name }}</button>
+      @endforeach
+    </div>
+
+    <!-- Grid Produk -->
+    <div class="row g-4">
+      @foreach($products as $product)
+        <div
+          class="col-6 col-md-4 col-lg-3 product"
+          data-category-id="{{ $product->category_product_id }}"
+        >
+          <div class="border rounded-4 p-3 shadow-sm h-100 position-relative">
+            @if($loop->first)
+              <span class="badge bg-info position-absolute top-0 start-0 m-2">New</span>
+            @endif
+            <div class="product-img-wrapper mb-3">
+              <img
+                src="{{ asset('storage/' . $product->image) }}"
+                class="product-img"
+                alt="{{ $product->name }}"
+              >
             </div>
-          @endforeach
+            <small class="text-muted">{{ $product->category->name ?? 'Tanpa Kategori' }}</small>
+            <h6 class="fw-bold product-name">{{ $product->name }}</h6>
+            <p class="mb-1 text-muted small">{{ $product->brand }}</p>
+            <div class="d-flex justify-content-between align-items-center">
+              <p class="product-price" data-price="{{ $product->harga }}">
+                Rp{{ number_format($product->harga,0,',','.') }}
+              </p>
+              @auth
+                <button
+                  class="btn btn-sm btn-outline-dark rounded-pill d-flex align-items-center btn-add-to-cart"
+                  data-id="{{ $product->id }}"
+                  data-name="{{ $product->name }}"
+                  data-price="{{ $product->harga }}"
+                  data-image="{{ asset('storage/' . $product->image) }}"
+                >
+                  <i class="bi bi-cart me-1"></i> Add
+                </button>
+              @endauth
+            </div>
+          </div>
         </div>
+      @endforeach
+    </div>
+  </div>
+</section>
 
 
-    <!-- delivery -->
-      </section>
       <section class="py-5">
         <div class="container">
           <div class="rounded-4 px-4 px-md-5 py-5" style="background-color: #064F4E;">
@@ -713,17 +654,14 @@
   </div>
 </footer>
 
+<!-- JS: Midtrans, Bootstrap, Leaflet, dan YOUR scripts -->
+  <script defer
+          src="https://app.sandbox.midtrans.com/snap/snap.js"
+          data-client-key="{{ config('midtrans.client_key') }}"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
-  <!-- Bootstrap JS -->
- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
- <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
-    integrity="sha512-XQoYM8mRkwHZjGcnRaXVbj7brUogZUI+FzqoMVcKMwnPCyGnTv9RqgGHRgkgXpSHJWKBGOW6RERCne2LgaaK1dQ=="
-    crossorigin=""></script>
-  <script src="front/js/script.js"></script>
-  <script src="front/js/second.js"></script>
-  <script src="front/js/logikacart.js"></script>
-   <script src="front/js/map.js"></script>
-   <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-  <script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key="{{ env('MIDTRANS_CLIENT_KEY') }}"></script>
+  <script src="{{ asset('front/js/script.js') }}"></script>
+  <script src="{{ asset('front/js/logikacart.js') }}"></script>
 </body>
 </html>

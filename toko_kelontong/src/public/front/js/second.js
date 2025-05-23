@@ -1,19 +1,21 @@
+// second.js
+
 document.addEventListener('DOMContentLoaded', function () {
-    const ratingInitial = document.querySelector('.rating-initial');
-    const ratingDetails = document.querySelector('.rating-details');
-    const ratingButtons = document.querySelectorAll('.emoji-btn');
+    const ratingInitial    = document.querySelector('.rating-initial');
+    const ratingDetails    = document.querySelector('.rating-details');
+    const ratingButtons    = document.querySelectorAll('.emoji-btn');
     const recentEmojiDisplay = document.getElementById('recentEmoji');
-    const detailTitle = document.getElementById('detailTitle');
+    const detailTitle      = document.getElementById('detailTitle');
     const submitFeedbackButton = document.getElementById('submitFeedback');
-    const closeRatingButton = document.getElementById('closeRating');
-    const feedbackTextarea = document.getElementById('feedbackText');
-    const thankYouModal = new bootstrap.Modal(document.getElementById('thankYouModal'));
-    const closePopupButton = document.querySelector('#thankYouModal .btn-secondary');
+    const closeRatingButton    = document.getElementById('closeRating');
+    const feedbackTextarea     = document.getElementById('feedbackText');
+    const thankYouModal     = new bootstrap.Modal(document.getElementById('thankYouModal'));
+    const closePopupButton  = document.querySelector('#thankYouModal .btn-secondary');
 
     ratingButtons.forEach(button => {
         button.addEventListener('click', function () {
             const rating = this.getAttribute('data-rating');
-            const emoji = this.textContent;
+            const emoji  = this.textContent;
 
             recentEmojiDisplay.textContent = emoji;
 
@@ -29,24 +31,19 @@ document.addEventListener('DOMContentLoaded', function () {
                     break;
                 default:
                     detailTitle.textContent = 'Bagikan Lebih Detail';
-                    break;
             }
 
             ratingInitial.classList.add('d-none');
             ratingDetails.classList.remove('d-none');
-            setTimeout(() => {
-                ratingDetails.classList.add('show');
-            }, 10);
+            setTimeout(() => ratingDetails.classList.add('show'), 10);
         });
     });
 
     submitFeedbackButton.addEventListener('click', function () {
-        const feedback = feedbackTextarea.value;
+        const feedback    = feedbackTextarea.value;
         const recentEmoji = recentEmojiDisplay.textContent;
-        const detailText = detailTitle.textContent;
-        // Di sini kamu bisa mengirimkan data rating dan feedback ke server
+        // TODO: Kirim rating & feedback ke server via fetch/AJAX
 
-        // Tampilkan modal terima kasih
         thankYouModal.show();
     });
 
@@ -56,35 +53,40 @@ document.addEventListener('DOMContentLoaded', function () {
             ratingInitial.classList.remove('d-none');
             ratingDetails.classList.add('d-none');
             recentEmojiDisplay.textContent = '';
-            feedbackTextarea.value = '';
-            detailTitle.textContent = 'Bagikan Lebih Detail';
+            feedbackTextarea.value         = '';
+            detailTitle.textContent        = 'Bagikan Lebih Detail';
         }, 300);
     });
 
     closePopupButton.addEventListener('click', function () {
         thankYouModal.hide();
-        // Setelah menutup modal, kembali ke tampilan awal rating (opsional)
+        // Kembalikan ke tampilan awal
         ratingDetails.classList.remove('show');
         setTimeout(() => {
             ratingInitial.classList.remove('d-none');
             ratingDetails.classList.add('d-none');
             recentEmojiDisplay.textContent = '';
-            feedbackTextarea.value = '';
-            detailTitle.textContent = 'Bagikan Lebih Detail';
+            feedbackTextarea.value         = '';
+            detailTitle.textContent        = 'Bagikan Lebih Detail';
         }, 300);
     });
 });
 
-// logika buat buka more produk di section produk
- document.addEventListener("DOMContentLoaded", function () {
-    const btnSeeMore = document.querySelector(".btn-see-more");
+
+
+// ======= bagian “See More” untuk produk tambahan =======
+document.addEventListener("DOMContentLoaded", function () {
+    const btnSeeMore    = document.querySelector(".btn-see-more");
     const extraProducts = document.querySelectorAll(".extra-product");
 
+    // Jika tombol atau produk tambahan tidak ada, hentikan di sini
+    if (!btnSeeMore || extraProducts.length === 0) return;
+
     btnSeeMore.addEventListener("click", function () {
-      extraProducts.forEach((product) => {
-        product.classList.remove("d-none");
-      });
-      // Sembunyikan tombol setelah ditampilkan semua
-      btnSeeMore.style.display = "none";
+        extraProducts.forEach(product => {
+            product.classList.remove("d-none");
+        });
+        // Sembunyikan tombol setelah menampilkan semua
+        btnSeeMore.style.display = "none";
     });
-  });
+});

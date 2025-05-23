@@ -27,32 +27,32 @@ Livewire::setScriptRoute(function ($handle) {
 //     return view('welcome');
 // });
 
-Route::get('/', [FrontendController::class, 'index'])->name('frontend');
-Route::post('/login', [AuthController::class, 'login'])->name('login');
+
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+*/
+
+// Halaman utama
+Route::get('/', [FrontendController::class, 'index'])
+    ->name('frontend');
+
+// Autentikasi
+Route::post('/login',    [AuthController::class, 'login'])->name('login');
 Route::post('/register', [AuthController::class, 'register'])->name('register');
 Route::post('/logout', function () {
     Auth::logout();
-    return redirect('/');
+    return redirect()->route('frontend');
 })->name('logout');
-Route::middleware('auth')->post('/checkout', [CheckoutController::class, 'store']);
-Route::post('/payment/callback', function (Request $request) {
-    $serverKey = env('MIDTRANS_SERVER_KEY');
-    $signature = hash('sha512', $request->order_id . $request->status_code . $request->gross_amount . $serverKey);
 
-    if ($signature === $request->signature_key) {
-        $pesanan = Pesanan::where('nomor_pesanan', $request->order_id)->first();
+// Semua ini dipanggil setelah user login
+Route::middleware('auth')->group(function () {
+    // Buat pesanan & generate snap_token
+    Route::post('/checkout', [CheckoutController::class, 'store'])
+         ->name('checkout.store');
 
-        if ($pesanan) {
-            $pesanan->update([
-                'status' => $request->transaction_status === 'settlement' ? 'diproses' : $pesanan->status,
-                'payment_type' => $request->payment_type ?? null,
-                'transaction_status' => $request->transaction_status ?? null,
-                'fraud_status' => $request->fraud_status ?? null,
-                'bank' => $request->va_numbers[0]['bank'] ?? null,
-                'va_number' => $request->va_numbers[0]['va_number'] ?? null,
-            ]);
-        }
-    }
-
-    return response()->json(['message' => 'Callback processed']);
+    // Update status setelah pembayaran di‐widget Snap
+    Route::post('/checkout/status', [CheckoutController::class, 'updateStatus'])
+         ->name('checkout.status');
 });
