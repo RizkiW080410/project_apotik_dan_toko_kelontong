@@ -21,18 +21,21 @@
       <div>
     <!-- Pesanan-->
 <!-- Tambahkan ini di dalam tag <a> di menu Pesanan -->
+  @auth
 <a href="/pesanan" class="me-3 text-dark text-decoration-none position-relative">
   <i class="bi bi-clipboard-check"></i>
   <span class="d-none d-md-inline">Pesanan</span>
   <span id="badge-pesanan" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display: none;"></span>
 </a>
-
+  @endauth
 
 <!-- Pengajuan -->
+@auth
 <a href="/pengajuan" class="me-3 text-dark text-decoration-none">
   <i class="bi bi-clipboard"></i>
   <span class="d-none d-md-inline">Pengajuan</span>
-</a>
+</a>  
+@endauth
 
 <!-- Akun -->
 @auth
@@ -120,6 +123,12 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
       </div>
       <div class="modal-body pt-2">
+        @if(session('error'))
+      <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        {{ session('error') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    @endif
         <form method="POST" action="{{ route('login') }}">
           @csrf
           <div class="mb-3">
@@ -152,11 +161,18 @@
         Belum punya akun? 
         <a href="#" class="text-decoration-none fw-semibold" data-bs-toggle="modal" data-bs-target="#modalRegister" data-bs-dismiss="modal">Daftar di sini ya</a>
       </div>
-
       </div>
     </div>
   </div>
 </div>
+
+@if(session('error') || $errors->any())
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    new bootstrap.Modal(document.getElementById('modalLogin')).show();
+  });
+</script>
+@endif
 
 <!-- Modal Register -->
 <!-- Modal Register -->
@@ -350,6 +366,7 @@
 <script src="front/js/cart-map-checkout.js"></script>
 <script src="front/js/kategori.js"></script>
 <script src="front/js/pengajuan.js"></script>
+<script src="front/js/pesanan.js"></script>
 {{-- <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script> --}}
 </body>
 </html>

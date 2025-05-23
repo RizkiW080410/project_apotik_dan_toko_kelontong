@@ -17,10 +17,17 @@ class AuthController extends Controller
         ]);
 
         if (Auth::attempt($credentials)) {
-            $request->session()->regenerate();
+        $request->session()->regenerate();
 
-            return redirect('/'); // langsung ke home
+        // cek role
+        if (! Auth::user()->hasRole('User')) {
+            Auth::logout();
+            return back()
+                ->with('error', 'Maaf, Anda tidak memiliki akses sebagai User.');
         }
+
+        return redirect('/');
+    }
 
         return back()->withErrors([
             'email' => 'Email atau password salah.',

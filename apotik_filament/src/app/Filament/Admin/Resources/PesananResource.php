@@ -6,15 +6,17 @@ use Filament\Forms;
 use Filament\Tables;
 use App\Models\Pesanan;
 use Filament\Forms\Form;
+use App\Models\Pengajuan;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\BadgeColumn;
-use Filament\Forms\Components\{Repeater, Select, TextInput, DatePicker, Hidden};
 use Illuminate\Database\Eloquent\Builder;
+use Filament\Forms\Components\Placeholder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Admin\Resources\PesananResource\Pages;
 use App\Filament\Admin\Resources\PesananResource\RelationManagers;
+use Filament\Forms\Components\{Repeater, Select, TextInput, DatePicker, Hidden};
 
 class PesananResource extends Resource
 {
@@ -31,12 +33,36 @@ class PesananResource extends Resource
                 Select::make('profile_id')
                     ->relationship('profile', 'nama_lengkap')
                     ->required()
-                    ->label('Pemesan'),
+                    ->label('Pemesan')
+                    ->reactive(),
 
                 Select::make('pengajuan_id')
-                    ->relationship('pengajuan', 'nomor_pengajuan')
+                    ->relationship(
+                        'pengajuan',
+                        'nomor_pengajuan',
+                        // di sinilah kita filter query:
+                        fn (Builder $query, $get) => $query
+                            ->where('profile_id', $get('profile_id'))
+                            ->where('status', 'disetujui')
+                    )
                     ->nullable()
-                    ->label('Berdasarkan Pengajuan'),
+                    ->reactive()
+                    ->label('Berdasarkan Pengajuan')
+                    ->hidden(fn (callable $get) => ! $get('profile_id')),
+                Placeholder::make('catatan_pengajuan')
+                    ->label('Catatan Pengajuan')
+                    ->reactive()
+                    ->content(fn (callable $get) => optional(Pengajuan::find($get('pengajuan_id')))->catatan ?? '-'),
+
+                Placeholder::make('alamat_pengajuan')
+                    ->label('Alamat Pengajuan')
+                    ->reactive()
+                    ->content(fn (callable $get) => optional(Pengajuan::find($get('pengajuan_id')))->alamat ?? '-'),
+
+                Placeholder::make('jarak_pengajuan')
+                    ->label('Jarak Pengajuan (km)')
+                    ->reactive()
+                    ->content(fn (callable $get) => optional(Pengajuan::find($get('pengajuan_id')))->jarak ?? 0),
                 TextInput::make('nomor_pesanan')
                     ->disabled()
                     ->dehydrated(false)
@@ -81,20 +107,72 @@ class PesananResource extends Resource
                             }),
                     ])
                     ->columns(3),
+                Repeater::make('pengiriman')
+                    ->label('Detail Pengiriman')
+                    ->relationship()
+                    ->maxItems(1)
+                    ->schema([
+                        Select::make('pengirim_id')
+                            ->label('Kurir')
+                            ->relationship('pengirim', 'name')
+                            ->required(),
+
+                        TextInput::make('alamat')
+                            ->label('Alamat Pengiriman')
+                            ->required()
+                            ->maxLength(255),
+
+                        TextInput::make('jarak')
+                            ->label('Jarak (km)')
+                            ->numeric()
+                            ->reactive()
+                            ->required(),
+
+                        TextInput::make('total')
+                            ->label('Ongkir')
+                            ->numeric()
+                            ->disabled()
+                            ->dehydrated()
+                            ->reactive()
+                            ->afterStateHydrated(function ($state, callable $set, $get) {
+                                $jarak = $get('jarak') ?? 0;
+                                $chargeable = max($jarak - 5, 0);
+                                $set('total', $chargeable * 3000);
+                            })
+                            ->afterStateUpdated(function ($state, callable $set, $get) {
+                                $jarak = $get('jarak') ?? 0;
+                                $chargeable = max($jarak - 5, 0);
+                                $set('total', $chargeable * 3000);
+                            }),
+
+                        Select::make('status')
+                            ->label('Status Pengiriman')
+                            ->options([
+                                'menunggu'     => 'Menunggu Konfirmasi',
+                                'dikirim' => 'Di Anttar',
+                                'selesai'   => 'Selesai',
+                                'dibatalkan'    => 'Dibatalkan',
+                            ])
+                            ->default('pending')
+                            ->required(),
+                    ])
+                    ->columns(2),
                 TextInput::make('total')
-                    ->label('Total Harga')
+                    ->label('Total Bayar')
+                    ->numeric()
                     ->disabled()
                     ->dehydrated()
-                    ->numeric()
                     ->default(0)
-                    ->afterStateHydrated(function (callable $set, $get) {
-                        $total = collect($get('items'))->sum('total');
-                        $set('total', $total);
-                    })
                     ->reactive()
+                    ->afterStateHydrated(function (callable $set, $get) {
+                        $itemsTotal     = collect($get('items'))->sum('total');
+                        $shippingTotal  = optional(collect($get('pengiriman'))->first())['total'] ?? 0;
+                        $set('total', $itemsTotal + $shippingTotal);
+                    })
                     ->afterStateUpdated(function (callable $set, $get) {
-                        $total = collect($get('items'))->sum('total');
-                        $set('total', $total);
+                        $itemsTotal     = collect($get('items'))->sum('total');
+                        $shippingTotal  = optional(collect($get('pengiriman'))->first())['total'] ?? 0;
+                        $set('total', $itemsTotal + $shippingTotal);
                     }),
                 Select::make('status')
                     ->options([

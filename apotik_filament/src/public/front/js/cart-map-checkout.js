@@ -194,24 +194,38 @@ onSuccess: function(result) {
         L.marker([userLat, userLng], { icon: userIcon }).addTo(leafletMap).bindPopup("Lokasi Anda");
 
         fetch(`https://router.project-osrm.org/route/v1/driving/${userLng},${userLat};${tokoLng},${tokoLat}?overview=full&geometries=geojson`)
-          .then((res) => res.json())
-          .then((data) => {
-            if (data.routes?.length) {
-              const route = data.routes[0];
-              L.geoJSON(route.geometry, { style: { color: "blue", weight: 4 } }).addTo(leafletMap);
-              leafletMap.fitBounds([[userLat, userLng], [tokoLat, tokoLng]]);
+  .then(res => res.json())
+  .then(data => {
+    if (!data.routes?.length) return;
+    const route = data.routes[0];
 
-              const distanceInKm = route.distance / 1000;
-              cartJarak = parseFloat(distanceInKm.toFixed(2));
-              cartOngkir = distanceInKm > 5 ? Math.ceil(distanceInKm - 5) * 3000 : 0;
+    // 1. Dapatkan jarak asli (km)
+    const rawDistanceKm = route.distance / 1000;
 
-              ongkirInfoEl.textContent = `Rp${cartOngkir.toLocaleString("id-ID")}`;
-              jarakInfoEl.textContent = `${cartJarak.toFixed(2)}`;
-              alamatTextarea.value = `Lokasi saat ini: (${userLat.toFixed(5)}, ${userLng.toFixed(5)})`;
+    // 2. Bulatkan jarak ke integer terdekat
+    const roundedKm = Math.round(rawDistanceKm);
+    cartJarak = roundedKm;
 
-              updateCartTotal();
-            }
-          });
+    // 3. Aturan ongkir
+    const MIN_FREE_KM = 5;
+    const RATE_PER_KM = 3000;
+    let ongkir = 0;
+
+    if (roundedKm > MIN_FREE_KM) {
+      // km yang dihitung = (jarak bulat – 5)
+      ongkir = (roundedKm - MIN_FREE_KM) * RATE_PER_KM;
+    }
+
+    cartOngkir = ongkir;
+
+    // 4. Tampilkan di UI
+    ongkirInfoEl.textContent = `Rp${cartOngkir.toLocaleString("id-ID")}`;
+    jarakInfoEl.textContent = `${cartJarak} km`;
+    alamatTextarea.value = `Lokasi saat ini: (${userLat.toFixed(5)}, ${userLng.toFixed(5)})`;
+
+    updateCartTotal();
+  });
+
       }, (err) => {
         alert("Gagal mendeteksi lokasi: " + err.message);
       });

@@ -164,6 +164,52 @@ class CheckoutController extends Controller
     }
 
     /**
+     * Generate Snap token untuk pesanan yang sudah pernah dibuat
+     */
+    public function tokenFromExisting(Pesanan $pesanan)
+    {
+        // kumpulkan item
+        $items = $pesanan->items->map(function($i) {
+            return [
+                'id'       => $i->obat_id,
+                'price'    => $i->total / $i->qty,
+                'quantity' => $i->qty,
+                'name'     => $i->obat->nama_obat,
+            ];
+        })->toArray();
+
+        // tambah ongkir sebagai 1 item
+        $items[] = [
+            'id'       => 'ONGKIR',
+            'price'    => $pesanan->pengiriman->total,
+            'quantity' => 1,
+            'name'     => 'Ongkos Kirim',
+        ];
+
+        $orderIdFull = $pesanan->nomor_pesanan . '-' . now()->timestamp;
+
+        // generate snap token
+        $snapToken = Snap::getSnapToken([
+            'transaction_details' => [
+                'order_id'     => $orderIdFull,
+                'gross_amount' => $pesanan->total,
+            ],
+            'item_details'     => $items,
+            'customer_details' => [
+                'first_name' => $pesanan->profile->nama_lengkap,
+                'email'      => $pesanan->profile->user->email,
+                'phone'      => $pesanan->profile->nomor_telepon,
+            ],
+        ]);
+
+        return response()->json([
+            'snap_token'    => $snapToken,
+            'order_id_full' => $orderIdFull,
+        ]);
+    }
+
+
+    /**
      * Update status menjadi diproses atau gagal
      */
     public function updateStatus(Request $request)

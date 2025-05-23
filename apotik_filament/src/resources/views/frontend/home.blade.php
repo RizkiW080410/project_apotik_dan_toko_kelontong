@@ -161,149 +161,48 @@
   </div>
 
   <div class="row g-4 flex-nowrap overflow-auto" id="productList">
+    @foreach($popularObats as $obat)
+      <div class="col-10 col-sm-6 col-md-4 col-lg-3 flex-shrink-0">
+        <div class="card h-100 border rounded shadow-sm p-2 d-flex flex-column">
+          <div class="position-relative">
+            {{-- Gambar produk --}}
+            <img src="{{ asset('storage/'.$obat->image) }}" 
+                 class="card-img-top" 
+                 alt="{{ $obat->nama }}">
 
-    <!-- CARD 1 -->
-    <div class="col-10 col-sm-6 col-md-4 col-lg-3 flex-shrink-0">
-      <div class="card h-100 border rounded shadow-sm p-2 d-flex flex-column">
-        <div class="position-relative">
-          <img src="front/assets/amox.png" class="card-img-top" alt="Produk 1">
-          <span class="position-absolute top-0 start-0 badge bg-danger m-2">Perlu Resep Dokter</span>
-        </div>
-        <div class="card-body d-flex flex-column justify-content-between">
-          <div>
-            <p class="text-muted small mb-1">Antibiotik</p>
-            <h6 class="card-title fw-semibold">Amoxicillin Capsuelles 500mg</h6>
+            {{-- Badge resep --}}
+            @if($obat->needs_prescription)
+              <span class="position-absolute top-0 start-0 badge bg-danger m-2">
+                Perlu Resep Dokter
+              </span>
+            @else
+              <span class="position-absolute top-0 start-0 badge bg-success m-2">
+                Tanpa Resep Dokter
+              </span>
+            @endif
           </div>
-          <hr class="my-2">
-        </div>
-        <div class="card-footer bg-transparent border-0">
-          <div class="d-flex flex-column">
-            <p class="text-danger fw-bold mb-2 harga-produk">Rp.15.000</p>
+
+          <div class="card-body d-flex flex-column justify-content-between">
+            <div>
+              <p class="text-muted small mb-1">{{ $obat->jenis->nama }}</p>
+              <h6 class="card-title fw-semibold">{{ $obat->nama }}</h6>
+            </div>
+            <hr class="my-2">
+          </div>
+
+          <div class="card-footer bg-transparent border-0">
+            <div class="d-flex flex-column">
+              <p class="text-danger fw-bold mb-2">
+                Rp.{{ number_format($obat->harga, 0, ',', '.') }}
+              </p>
+            </div>
           </div>
         </div>
       </div>
-    </div>
-
-    <!-- CARD 2 -->
-    <div class="col-10 col-sm-6 col-md-4 col-lg-3 flex-shrink-0">
-      <div class="card h-100 border rounded shadow-sm p-2 d-flex flex-column">
-        <div class="position-relative">
-          <img src="front/assets/vitc2.png" class="card-img-top" alt="Produk 2">
-          <span class="position-absolute top-0 start-0 badge bg-success m-2">Tanpa Resep Dokter</span>
-        </div>
-        <div class="card-body d-flex flex-column justify-content-between">
-          <div>
-            <p class="text-muted small mb-1">Vitamin</p>
-            <h6 class="card-title fw-semibold">Immunoboost 1000mg Vitamin C Effervescent</h6>
-          </div>
-          <hr class="my-2">
-        </div>
-        <div class="card-footer bg-transparent border-0">
-          <div class="d-flex flex-column">
-            <p class="text-danger fw-bold mb-2 harga-produk">Rp.25.000</p>
-            <button class="btn custom-btn w-100 cart-icon-populer">
-              <i class="bi bi-cart-plus me-2"></i>Tambah ke Keranjang
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- CARD 3 -->
-    <div class="col-10 col-sm-6 col-md-4 col-lg-3 flex-shrink-0">
-      <div class="card h-100 border rounded shadow-sm p-2 d-flex flex-column">
-        <div class="position-relative">
-          <img src="front/assets/oxy.png" class="card-img-top" alt="Produk 3">
-          <span class="position-absolute top-0 start-0 badge bg-danger m-2">Perlu Resep Dokter</span>
-        </div>
-        <div class="card-body d-flex flex-column justify-content-between">
-          <div>
-            <p class="text-muted small mb-1">Narkotik</p>
-            <h6 class="card-title fw-semibold">Oxycodone and Acetaminophen 325mg</h6>
-          </div>
-          <hr class="my-2">
-        </div>
-        <div class="card-footer bg-transparent border-0">
-          <div class="d-flex flex-column">
-            <p class="text-danger fw-bold mb-2 harga-produk">Rp.45.000</p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- CARD 4 -->
-    <div class="col-10 col-sm-6 col-md-4 col-lg-3 flex-shrink-0">
-      <div class="card h-100 border rounded shadow-sm p-2 d-flex flex-column">
-        <div class="position-relative">
-          <img src="front/assets/anti.png" class="card-img-top" alt="Produk 4">
-          <span class="position-absolute top-0 start-0 badge bg-success m-2">Tanpa Resep Dokter</span>
-        </div>
-        <div class="card-body d-flex flex-column justify-content-between">
-          <div>
-            <p class="text-muted small mb-1">Antiseptic</p>
-            <h6 class="card-title fw-semibold">First Aid Antiseptic Ointment</h6>
-          </div>
-          <hr class="my-2">
-        </div>
-        <div class="card-footer bg-transparent border-0">
-          <div class="d-flex flex-column">
-            <p class="text-danger fw-bold mb-2 harga-produk">Rp.19.000</p>
-              <button class="btn custom-btn w-100 cart-icon-populer">
-              <i class="bi bi-cart-plus me-2"></i>Tambah ke Keranjang
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-      <!-- CARD 3 -->
-    <div class="col-10 col-sm-6 col-md-4 col-lg-3 flex-shrink-0">
-      <div class="card h-100 border rounded shadow-sm p-2 d-flex flex-column">
-        <div class="position-relative">
-          <img src="front/assets/oxy.png" class="card-img-top" alt="Produk 3">
-          <span class="position-absolute top-0 start-0 badge bg-danger m-2">Perlu Resep Dokter</span>
-        </div>
-        <div class="card-body d-flex flex-column justify-content-between">
-          <div>
-            <p class="text-muted small mb-1">Narkotik</p>
-            <h6 class="card-title fw-semibold">Oxycodone and Acetaminophen 325mg</h6>
-          </div>
-          <hr class="my-2">
-        </div>
-        <div class="card-footer bg-transparent border-0">
-          <div class="d-flex flex-column">
-            <p class="text-danger fw-bold mb-2 harga-produk">Rp.45.000</p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- CARD 4 -->
-    <div class="col-10 col-sm-6 col-md-4 col-lg-3 flex-shrink-0">
-      <div class="card h-100 border rounded shadow-sm p-2 d-flex flex-column">
-        <div class="position-relative">
-          <img src="front/assets/anti.png" class="card-img-top" alt="Produk 4">
-          <span class="position-absolute top-0 start-0 badge bg-success m-2">Tanpa Resep Dokter</span>
-        </div>
-        <div class="card-body d-flex flex-column justify-content-between">
-          <div>
-            <p class="text-muted small mb-1">Antiseptic</p>
-            <h6 class="card-title fw-semibold">First Aid Antiseptic Ointment</h6>
-          </div>
-          <hr class="my-2">
-        </div>
-        <div class="card-footer bg-transparent border-0">
-          <div class="d-flex flex-column">
-            <p class="text-danger fw-bold mb-2 harga-produk">Rp.19.000</p>
-          <button class="btn custom-btn w-100 cart-icon-populer">
-            <i class="bi bi-cart-plus me-2"></i>Tambah ke Keranjang
-          </button>
-          </div>
-        </div>
-      </div>
-    </div>
+    @endforeach
   </div>
 </section>
+
 <!-- End Populer product -->
 
 

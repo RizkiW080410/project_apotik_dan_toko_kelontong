@@ -25,25 +25,24 @@ Livewire::setScriptRoute(function ($handle) {
 // ✅ Halaman publik
     Route::get('/', [FrontendController::class, 'home'])->name('home');
 // ✅ Autentikasi
-Route::post('/checkout/status', [CheckoutController::class, 'updateStatus'])->name('checkout.updateStatus');
-
 Route::post('/login', [AuthController::class, 'login'])->name('login');
 Route::post('/register', [AuthController::class, 'register'])->name('register');
-// Route::get ('/midtrans/finish',    [CheckoutController::class,'finish'])->name('midtrans.finish');
-// Route::post('/midtrans/callback', [CheckoutController::class, 'store'])->name('midtrans.callback');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-// Route::post('/midtrans/callback', [CheckoutController::class, 'callback']);
+
+// ✅ UpdateStatus
+Route::post('/checkout/status', [CheckoutController::class, 'updateStatus'])->name('checkout.updateStatus');
+
 
 // ✅ Halaman yang butuh login
 Route::middleware(['auth'])->group(function () {
-    
     Route::get('/pesananresep', [FrontendController::class, 'pesananresep']);
     Route::post('/checkout', [CheckoutController::class, 'store'])->name('checkout.store');
+    Route::post('/checkout/{pesanan}/token', [CheckoutController::class, 'tokenFromExisting'])
+         ->name('checkout.token');
     Route::get('/pengajuan', [FrontendController::class, 'pengajuan'])->name('frontend.pengajuan');
     Route::get('/pesanan', [FrontendController::class, 'pesanan']);
     Route::post('/pesananresep/kirim', [FrontendController::class, 'submitPesananResep'])->name('pesananresep.submit');
     Route::get('/profile', [FrontendController::class, 'profile']);
-    
 });
 
 
